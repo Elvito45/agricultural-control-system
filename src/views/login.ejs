@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Iniciar Sesión</title>
+</head>
+<body>
+    <h1>Iniciar Sesión</h1>
+    <form action="/api/auth/login" method="POST">
+        <label>Usuario:</label>
+        <input type="text" name="username" required>
+        <label>Contraseña:</label>
+        <input type="password" name="password" required>
+        <button type="submit">Entrar</button>
+    </form>
+</body>
+</html>
