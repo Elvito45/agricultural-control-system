@@ -28,6 +28,14 @@ Farm.init({
             model: 'users',
             key: 'id'
         }
+    },
+    sealImage: {
+        type: DataTypes.STRING,
+        allowNull: true // Puede ser null si aún no se ha subido
+    },
+    sealHash: {
+        type: DataTypes.STRING,
+        allowNull: true // Puede ser null si aún no se ha subido
     }
 }, {
     sequelize,

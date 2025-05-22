@@ -6,6 +6,7 @@ const authRoutes = require('./routes/authRoutes');
 const farmRoutes = require('./routes/farmRoutes');
 const livestockRoutes = require('./routes/livestockRoutes');
 const { checkAuth } = require('./middleware/authMiddleware');
+const expressSession = require('express-session');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,14 @@ connectDB();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true })); // Para formularios HTML
 
+// Configuración de express-session
+app.use(expressSession({
+    secret: 'mi_clave_secreta_segura', // Cambia esto por una clave segura en producción
+    resave: false,
+    saveUninitialized: false,
+    cookie: { secure: false } // Cambia a true si usas HTTPS
+}));
+
 // Rutas públicas (vistas)
 app.get('/', (req, res) => {
     res.render('index', { title: 'Inicio' });
@@ -36,16 +45,17 @@ app.get('/register', (req, res) => {
 // Rutas de autenticación (públicas)
 app.use('/api/auth', authRoutes);
 
-// Middleware de autenticación SOLO para rutas protegidas
+// Ruta protegida: dashboard
+app.get('/dashboard', checkAuth, (req, res) => {
+    res.render('dashboard', { title: 'Panel de Control', user: req.session.user });
+});
+
+// Middleware de autenticación SOLO para rutas protegidas de API
 app.use(checkAuth);
 
 // Rutas protegidas (APIs)
 app.use('/api/farms', farmRoutes);
 app.use('/api/livestock', livestockRoutes);
-
-app.get('/dashboard', (req, res) => {
-    res.render('dashboard', { title: 'Panel de Control' });
-});
 
 // Start the server
 app.listen(PORT, () => {

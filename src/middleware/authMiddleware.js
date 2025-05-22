@@ -1,15 +1,20 @@
 exports.checkAuth = (req, res, next) => {
-    const token = req.headers['authorization'];
+    // Verifica el token en la sesión
+    const token = req.session && req.session.token;
 
     if (!token) {
-        return res.status(403).json({ message: 'No token provided.' });
+        // Si no hay token, redirige a login
+        return res.redirect('/login');
     }
 
-    // Here you would typically verify the token (e.g., using JWT)
-    // For demonstration, let's assume a simple verification
-    if (token !== 'your-secret-token') {
-        return res.status(401).json({ message: 'Unauthorized.' });
-    }
+    // Aquí podrías verificar el token JWT si lo deseas
+    // Si quieres validar el JWT:
+    // const jwt = require('jsonwebtoken');
+    // try {
+    //     jwt.verify(token, 'your-secret-token');
+    // } catch (err) {
+    //     return res.redirect('/login');
+    // }
 
     next();
 };

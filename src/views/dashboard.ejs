@@ -7,5 +7,11 @@
     <h1>Panel de Control</h1>
     <a href="/api/farms">Ver fincas</a>
     <a href="/api/livestock">Ver ganado</a>
+
+    <form action="/api/farms/<%= farmId %>/seal" method="POST" enctype="multipart/form-data">
+      <label for="seal">Subir sello (hierro):</label>
+      <input type="file" name="seal" accept="image/*" required>
+      <button type="submit">Subir Sello</button>
+    </form>
 </body>
 </html>

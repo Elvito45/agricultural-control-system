@@ -40,6 +40,35 @@ class FarmController {
             res.status(500).json({ message: 'Error updating farm', error });
         }
     }
+
+    // Maneja la carga de sellos (imágenes)
+    async uploadSeal(req, res) {
+        try {
+            // 1. Recibe la imagen cargada (req.file)
+            const file = req.file;
+            if (!file) {
+                return res.status(400).json({ message: 'No se recibió ninguna imagen.' });
+            }
+
+            // 2. Generar hash perceptual de la imagen (deberás implementar esto con image-hash o similar)
+            // const imageHash = await generarHash(file.path);
+            // Ejemplo: const imageHash = await imageHashAsync(file.path);
+
+            // 3. Verificar si el hash ya existe en la base de datos (deberás implementar la consulta)
+            // const existe = await selloModel.findOne({ where: { image_hash: imageHash } });
+            // if (existe) {
+            //     return res.status(409).json({ message: 'El sello ya está registrado.' });
+            // }
+
+            // 4. Guardar la imagen y el hash en la base de datos (deberás implementar la inserción)
+            // await selloModel.create({ ... });
+
+            // 5. Responder éxito
+            res.status(201).json({ message: 'Sello cargado correctamente (lógica pendiente de implementar).' });
+        } catch (error) {
+            res.status(500).json({ message: 'Error al cargar el sello', error });
+        }
+    }
 }
 
 module.exports = FarmController;
