@@ -1,12 +1,4 @@
--- CREATE TABLE IF NOT EXISTS `municipios` (
---   `id_municipio` int(11) NOT NULL AUTO_INCREMENT,
---   `id_estado` int(11) NOT NULL,
---   `municipio` varchar(100) NOT NULL,
---   PRIMARY KEY (`id_municipio`),
---   KEY `id_estado` (`id_estado`)
--- ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=463 ;
-
-INSERT INTO `municipios` (`id_municipio`, `id_estado`, `municipio`) VALUES
+INSERT INTO `towns` (`id`, `state_id`, `name`) VALUES
 (1, 1, 'Alto Orinoco'),
 (2, 1, 'Atabapo'),
 (3, 1, 'Atures'),

@@ -46,8 +46,18 @@ app.get('/register', (req, res) => {
 app.use('/api/auth', authRoutes);
 
 // Ruta protegida: dashboard
-app.get('/dashboard', checkAuth, (req, res) => {
-    res.render('dashboard', { title: 'Panel de Control', user: req.session.user });
+app.get('/dashboard', checkAuth, async (req, res) => {
+    const db = require('./config/db');
+    // Obtener todos los estados
+    db.pool.query('SELECT id, name FROM states ORDER BY name', (err, states) => {
+        if (err) return res.status(500).send('Error al cargar los estados');
+        res.render('dashboard', {
+            title: 'Panel de Control',
+            user: req.session.user,
+            states,
+            towns: [] // Inicialmente vacío, se llenará por AJAX
+        });
+    });
 });
 
 // Middleware de autenticación SOLO para rutas protegidas de API
@@ -56,6 +66,17 @@ app.use(checkAuth);
 // Rutas protegidas (APIs)
 app.use('/api/farms', farmRoutes);
 app.use('/api/livestock', livestockRoutes);
+
+// Endpoint para obtener municipios por estado (AJAX)
+app.get('/api/towns', (req, res) => {
+    const db = require('./config/db');
+    const stateId = req.query.state_id;
+    if (!stateId) return res.json([]);
+    db.pool.query('SELECT id, name FROM towns WHERE state_id = ? ORDER BY name', [stateId], (err, towns) => {
+        if (err) return res.status(500).json([]);
+        res.json(towns);
+    });
+});
 
 // Start the server
 app.listen(PORT, () => {

@@ -2,16 +2,138 @@
 <html>
 <head>
     <title>Panel de Control</title>
+    <style>
+        nav { background: #f0f0f0; padding: 10px; }
+        nav a { margin-right: 15px; text-decoration: none; color: #333; }
+        .panel { margin: 20px 0; }
+        form { margin-top: 20px; }
+        label { display: block; margin-top: 10px; }
+    </style>
 </head>
 <body>
-    <h1>Panel de Control</h1>
-    <a href="/api/farms">Ver fincas</a>
-    <a href="/api/livestock">Ver ganado</a>
+    <nav>
+        <span>Bienvenido, <%= user ? user.names : '' %> <%= user ? user.surnames : '' %></span>
+        <a href="/dashboard">Inicio</a>
+        <a href="/logout">Cerrar sesión</a>
+    </nav>
 
-    <form action="/api/farms/<%= farmId %>/seal" method="POST" enctype="multipart/form-data">
-      <label for="seal">Subir sello (hierro):</label>
-      <input type="file" name="seal" accept="image/*" required>
-      <button type="submit">Subir Sello</button>
-    </form>
+    <div class="panel">
+        <h2>Información de contacto</h2>
+        <ul>
+            <li><strong>Nombre:</strong> <%= user ? user.names : '' %> <%= user ? user.surnames : '' %></li>
+            <li><strong>Email:</strong> <%= user ? user.email : '' %></li>
+            <li><strong>Teléfono:</strong> <%= user ? user.phone : '' %></li>
+        </ul>
+        <form action="/api/auth/change-password" method="POST">
+            <label for="currentPassword">Contraseña actual:</label>
+            <input type="password" name="currentPassword" required>
+            <label for="newPassword">Nueva contraseña:</label>
+            <input type="password" name="newPassword" required>
+            <button type="submit">Cambiar contraseña</button>
+        </form>
+    </div>
+
+    <div class="panel">
+        <h2>Registrar Finca y Sello de Ganado</h2>
+        <form action="/api/farms" method="POST" enctype="multipart/form-data">
+            <label for="name">Nombre de la finca:</label>
+            <input type="text" name="name" required>
+
+            <label for="address">Dirección:</label>
+            <input id="address" type="search" name="address" required autocomplete="off">
+            <script>
+            document.getElementById('address').addEventListener('keydown', function(e) {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+              }
+            });
+            </script>
+            <input type="hidden" id="latitude" name="latitude">
+            <input type="hidden" id="longitude" name="longitude">
+            <input type="hidden" id="maps_url" name="maps_url">
+            <div id="map" style="height: 300px; width: 100%; margin-top:10px;"></div>
+
+            <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPo92x7xE_8rl4ydg_WYoxGny-lpd3XdQ&libraries=places"></script>
+            <script>
+            let map, marker, autocomplete;
+            function initMap() {
+                const defaultLatLng = { lat: 8.0, lng: -66.0 };
+                map = new google.maps.Map(document.getElementById('map'), {
+                    center: defaultLatLng,
+                    zoom: 6
+                });
+                marker = new google.maps.Marker({
+                    position: defaultLatLng,
+                    map: map,
+                    draggable: true
+                });
+                autocomplete = new google.maps.places.Autocomplete(document.getElementById('address'));
+                autocomplete.bindTo('bounds', map);
+                autocomplete.addListener('place_changed', function() {
+                    const place = autocomplete.getPlace();
+                    if (!place.geometry) return;
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(15);
+                    marker.setPosition(place.geometry.location);
+                    updateLatLngInputs(place.geometry.location.lat(), place.geometry.location.lng());
+                });
+                marker.addListener('dragend', function() {
+                    const pos = marker.getPosition();
+                    updateLatLngInputs(pos.lat(), pos.lng());
+                });
+            }
+            function updateLatLngInputs(lat, lng) {
+                document.getElementById('latitude').value = lat;
+                document.getElementById('longitude').value = lng;
+                document.getElementById('maps_url').value = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+            }
+            window.onload = function() { initMap(); }
+            </script>
+
+            <label for="state_id">Estado:</label>
+            <select name="state_id" id="state_id" required>
+                <option value="">Seleccione un estado</option>
+                <% states.forEach(function(state) { %>
+                    <option value="<%= state.id %>"><%= state.name %></option>
+                <% }); %>
+            </select>
+
+            <label for="town_id">Municipio:</label>
+            <select name="town_id" id="town_id" required>
+                <option value="">Seleccione un municipio</option>
+            </select>
+
+            <script>
+            document.getElementById('state_id').addEventListener('change', function() {
+                var stateId = this.value;
+                var townSelect = document.getElementById('town_id');
+                townSelect.innerHTML = '<option value="">Cargando...</option>';
+                if(stateId) {
+                    fetch('/api/towns?state_id=' + stateId)
+                        .then(res => res.json())
+                        .then(function(data) {
+                            townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
+                            data.forEach(function(town) {
+                                townSelect.innerHTML += `<option value="${town.id}">${town.name}</option>`;
+                            });
+                        });
+                } else {
+                    townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
+                }
+            });
+            </script>
+
+            <label for="description">Descripción:</label>
+            <textarea name="description"></textarea>
+
+            <label for="quantity">Cantidad de ganado:</label>
+            <input type="number" name="quantity" required>
+
+            <label for="seal">Subir sello (hierro) del ganado:</label>
+            <input type="file" name="seal" accept="image/*" required>
+
+            <button type="submit">Registrar finca y sello</button>
+        </form>
+    </div>
 </body>
 </html>

@@ -6,10 +6,12 @@
 <body>
     <h1>Registro de Usuario</h1>
     <form action="/api/auth/register" method="POST">
-        <label>Nombre:</label>
-        <input type="text" name="nombre" required>
-        <label>Usuario:</label>
-        <input type="text" name="username" required>
+        <label>ID:</label>
+        <input type="number" name="id" required>
+        <label>Nombres:</label>
+        <input type="text" name="names" required>
+        <label>Apellidos:</label>
+        <input type="text" name="surnames" required>
         <label>Email:</label>
         <input type="email" name="email" required>
         <label>Contraseña:</label>
