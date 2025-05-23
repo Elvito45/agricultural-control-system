@@ -1,0 +1,102 @@
+body {
+    background: #e6f4ea; /* Verde claro suave */
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+h1 {
+    color: #218c4a; /* Verde intenso */
+    text-align: center;
+    margin-top: 40px;
+}
+a {
+    display: inline-block;
+    margin: 20px;
+    padding: 12px 24px;
+    background: #43a047; /* Verde medio */
+    color: #fff;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 16px;
+    transition: background 0.2s;
+}
+a:hover {
+    background: #2e7031; /* Verde oscuro */
+}
+.container {
+    max-width: 600px;
+    margin: 80px auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 40px 30px;
+    text-align: center;
+}
+.login-container {
+    max-width: 400px;
+    margin: 100px auto;
+    background: #d0ecd8; /* Verde muy claro */
+    border-radius: 10px;
+    box-shadow: 0 4px 24px rgba(44,62,80,0.10);
+    padding: 40px 30px 30px 30px;
+    text-align: center;
+}
+.login-container h1 {
+    margin-bottom: 30px;
+    color: #218c4a;
+}
+.login-form label {
+    display: block;
+    text-align: left;
+    margin-bottom: 8px;
+    color: #27613b;
+    font-weight: bold;
+}
+.login-form input[type="text"],
+.login-form input[type="password"],
+.login-form input[type="email"] {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 18px;
+    border: 1px solid #b2d8b2;
+    border-radius: 5px;
+    font-size: 15px;
+    background: #f4fbf6;
+    transition: border 0.2s;
+}
+.login-form input[type="text"]:focus,
+.login-form input[type="password"]:focus {
+    border: 1.5px solid #43a047;
+    outline: none;
+}
+.login-form button {
+    width: 100%;
+    padding: 12px;
+    background: #43a047;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.login-form button:hover {
+    background: #2e7031;
+}
+.login-form .error-message {
+    color: #e74c3c;
+    margin-bottom: 15px;
+    font-size: 15px;
+    text-align: center;
+}
+.background-slider {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: -1;
+    background-size: cover;
+    background-position: center;
+    transition: background-image 1s ease-in-out;
+}
