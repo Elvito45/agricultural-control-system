@@ -1,33 +1,43 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class User extends Model {}
+class Owner extends Model {}
 
-User.init({
+Owner.init({
     id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.STRING(8),
         primaryKey: true
     },
-    username: {
-        type: DataTypes.STRING,
+    names: {
+        type: DataTypes.STRING(50),
+        allowNull: false
+    },
+    surnames: {
+        type: DataTypes.STRING(50),
+        allowNull: false
+    },
+    phone: {
+        type: DataTypes.STRING(15),
+        allowNull: true
+    },
+    email: {
+        type: DataTypes.STRING(100),
         allowNull: false,
         unique: true
     },
-    password: {
-        type: DataTypes.STRING,
+    hash: {
+        type: DataTypes.STRING(255),
         allowNull: false
     },
-    farmId: {
-        type: DataTypes.INTEGER,
-        references: {
-            model: 'farms',
-            key: 'id'
-        }
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
 }, {
     sequelize,
-    modelName: 'User'
+    modelName: 'Owner',
+    tableName: 'owners',
+    timestamps: false
 });
 
-module.exports = User;
+module.exports = Owner;

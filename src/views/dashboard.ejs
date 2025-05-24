@@ -113,6 +113,22 @@
             border-radius: 8px;
             margin-bottom: 15px;
         }
+        .flash-message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .flash-message.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .flash-message.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
         @media (max-width: 900px) {
             .dashboard-main { padding: 10px 2vw; }
             .dashboard-top { flex-direction: column; gap: 20px; }
@@ -130,6 +146,11 @@
     </nav>
 
     <div class="dashboard-main">
+        <% if (flash) { %>
+            <div class="flash-message <%= flash.type %>">
+                <%= flash.message %>
+            </div>
+        <% } %>
         <div class="dashboard-top">
             <div class="panel">
                 <h2>Información de contacto</h2>
@@ -152,8 +173,8 @@
         </div>
 
         <div class="panel" style="max-width:100%;margin-bottom:0;">
-            <h2>Registrar Finca y Sello de Ganado</h2>
-            <form action="/api/farms" method="POST" enctype="multipart/form-data">
+            <h2>Registrar Finca</h2>
+            <form action="/api/farms" method="POST">
                 <label for="name">Nombre de la finca:</label>
                 <input type="text" name="name" required>
 
@@ -183,12 +204,20 @@
                 <label for="quantity">Cantidad de ganado:</label>
                 <input type="number" name="quantity" required>
 
-                <label for="seal">Subir sello (hierro) del ganado:</label>
-                <input type="file" name="seal" accept="image/*" required>
-
-                <button type="submit">Registrar finca y sello</button>
+                <button type="submit">Registrar finca</button>
             </form>
         </div>
+
+        <% if (farms && farms.length > 0) { %>
+        <div class="panel" style="max-width:100%;margin-bottom:0;">
+            <h2>Agregar/Modificar Sello de Finca</h2>
+            <form action="/api/farms/<%= farms[0].id %>/seal" method="POST" enctype="multipart/form-data">
+                <label for="seal">Subir sello (hierro) del ganado:</label>
+                <input type="file" name="seal" accept="image/*" required>
+                <button type="submit">Agregar/Modificar sello</button>
+            </form>
+        </div>
+        <% } %>
     </div>
 
     <script>

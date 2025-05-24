@@ -10,38 +10,62 @@ Farm.init({
         autoIncrement: true
     },
     name: {
-        type: DataTypes.STRING,
+        type: DataTypes.STRING(100),
         allowNull: false
     },
     address: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.STRING(255),
+        allowNull: true
     },
-    state: {
-        type: DataTypes.STRING,
-        allowNull: false
-    },
-    userId: {
-        type: DataTypes.INTEGER,
+    owner_id: {
+        type: DataTypes.STRING(8),
         allowNull: false,
         references: {
-            model: 'users',
+            model: 'owners',
             key: 'id'
         }
     },
-    sealImage: {
-        type: DataTypes.STRING,
-        allowNull: true // Puede ser null si aún no se ha subido
+    state_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'states',
+            key: 'id'
+        }
     },
-    sealHash: {
-        type: DataTypes.STRING,
-        allowNull: true // Puede ser null si aún no se ha subido
+    town_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'towns',
+            key: 'id'
+        }
+    },
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: true
+    },
+    maps_url: {
+        type: DataTypes.STRING(500),
+        allowNull: true
+    },
+    latitude: {
+        type: DataTypes.DECIMAL(10,8),
+        allowNull: true
+    },
+    longitude: {
+        type: DataTypes.DECIMAL(11,8),
+        allowNull: true
+    },
+    created_at: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
     }
 }, {
     sequelize,
     modelName: 'Farm',
     tableName: 'farms',
-    timestamps: true
+    timestamps: false
 });
 
 module.exports = Farm;

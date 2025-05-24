@@ -1,25 +1,15 @@
-const mysql = require('mysql2');
+const { Sequelize } = require('sequelize');
 
-const pool = mysql.createPool({
+// Configura la instancia de Sequelize para MySQL
+const sequelize = new Sequelize('cattle', 'root', '', {
     host: 'localhost',
-    user: 'root',           // <-- tu usuario de MySQL
-    password: '',           // <-- tu contraseña de MySQL (vacía si no tiene)
-    database: 'cattle',// <-- tu base de datos
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
+    dialect: 'mysql',
+    logging: false // Puedes poner true para ver las queries en consola
 });
 
-function connectDB() {
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error('Error al conectar a la base de datos:', err);
-        } else {
-            console.log('Conexión a la base de datos MySQL exitosa');
-            connection.release();
-        }
-    });
-}
+// Comprobación de conexión
+sequelize.authenticate()
+    .then(() => console.log('Conexión a la base de datos MySQL exitosa'))
+    .catch(err => console.error('Error al conectar a la base de datos:', err));
 
-module.exports = connectDB;
-module.exports.pool = pool;
+module.exports = sequelize;

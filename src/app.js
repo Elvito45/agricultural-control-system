@@ -1,10 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const path = require('path');
-const connectDB = require('./config/db');
 const authRoutes = require('./routes/authRoutes');
 const farmRoutes = require('./routes/farmRoutes');
-const livestockRoutes = require('./routes/livestockRoutes');
 const { checkAuth } = require('./middleware/authMiddleware');
 const expressSession = require('express-session');
 
@@ -15,9 +13,6 @@ const PORT = process.env.PORT || 3000;
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Conexión a la base de datos
-connectDB();
 
 // Middleware
 app.use(bodyParser.json());
@@ -47,17 +42,38 @@ app.use('/api/auth', authRoutes);
 
 // Ruta protegida: dashboard
 app.get('/dashboard', checkAuth, async (req, res) => {
-    const db = require('./config/db');
-    // Obtener todos los estados
-    db.pool.query('SELECT id, name FROM states ORDER BY name', (err, states) => {
-        if (err) return res.status(500).send('Error al cargar los estados');
+    const Farm = require('./models/farm');
+    const sequelize = require('./config/db');
+    // Obtener todos los estados usando Sequelize
+    try {
+        const [states] = await sequelize.query('SELECT * FROM states ORDER BY name');
+        let farms = [];
+        if (req.session.user) {
+            try {
+                // Buscar fincas del usuario autenticado
+                farms = await Farm.findAll({ where: { owner_id: req.session.user.id } });
+            } catch (farmErr) {
+                console.error('Error al buscar las fincas del usuario:', farmErr);
+                return res.status(500).send('Error al buscar las fincas del usuario: ' + farmErr.message);
+            }
+        }
+        // Mostrar mensaje flash si existe
+        let flash = null;
+        if (req.session.flash) {
+            flash = req.session.flash;
+            delete req.session.flash;
+        }
         res.render('dashboard', {
             title: 'Panel de Control',
             user: req.session.user,
             states,
-            towns: [] // Inicialmente vacío, se llenará por AJAX
+            towns: [], // Inicialmente vacío, se llenará por AJAX
+            farms,
+            flash
         });
-    });
+    } catch (err) {
+        return res.status(500).send('Error al cargar los estados');
+    }
 });
 
 // Middleware de autenticación SOLO para rutas protegidas de API
@@ -65,17 +81,20 @@ app.use(checkAuth);
 
 // Rutas protegidas (APIs)
 app.use('/api/farms', farmRoutes);
-app.use('/api/livestock', livestockRoutes);
 
 // Endpoint para obtener municipios por estado (AJAX)
-app.get('/api/towns', (req, res) => {
-    const db = require('./config/db');
+app.get('/api/towns', async (req, res) => {
+    const sequelize = require('./config/db');
     const stateId = req.query.state_id;
     if (!stateId) return res.json([]);
-    db.pool.query('SELECT id, name FROM towns WHERE state_id = ? ORDER BY name', [stateId], (err, towns) => {
-        if (err) return res.status(500).json([]);
+    try {
+        const [towns] = await sequelize.query('SELECT id, name FROM towns WHERE state_id = ? ORDER BY name', {
+            replacements: [stateId]
+        });
         res.json(towns);
-    });
+    } catch (err) {
+        res.status(500).json([]);
+    }
 });
 
 // Start the server

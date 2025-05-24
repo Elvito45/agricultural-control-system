@@ -1,15 +1,37 @@
 class FarmController {
-    constructor(farmModel) {
-        this.farmModel = farmModel;
+    constructor() {
+        this.farmModel = require('../models/farm');
     }
 
     async createFarm(req, res) {
         try {
-            const { name, address, state, userId } = req.body;
-            const newFarm = await this.farmModel.create({ name, address, state, userId });
-            res.status(201).json(newFarm);
+            const {
+                name,
+                address,
+                state_id,
+                town_id,
+                description,
+                maps_url,
+                latitude,
+                longitude
+            } = req.body;
+            const owner_id = req.session.user.id;
+            const newFarm = await this.farmModel.create({
+                name,
+                address,
+                owner_id,
+                state_id,
+                town_id,
+                description,
+                maps_url,
+                latitude,
+                longitude
+            });
+            req.session.flash = { type: 'success', message: 'Finca registrada correctamente.' };
+            res.redirect('/dashboard');
         } catch (error) {
-            res.status(500).json({ message: 'Error creating farm', error });
+            req.session.flash = { type: 'error', message: 'Error al registrar la finca.' };
+            res.redirect('/dashboard');
         }
     }
 
@@ -44,27 +66,42 @@ class FarmController {
     // Maneja la carga de sellos (imágenes)
     async uploadSeal(req, res) {
         try {
-            // 1. Recibe la imagen cargada (req.file)
             const file = req.file;
             if (!file) {
                 return res.status(400).json({ message: 'No se recibió ninguna imagen.' });
             }
 
-            // 2. Generar hash perceptual de la imagen (deberás implementar esto con image-hash o similar)
-            // const imageHash = await generarHash(file.path);
-            // Ejemplo: const imageHash = await imageHashAsync(file.path);
+            const { imageHash } = require('image-hash');
+            const farmId = req.params.id;
+            const userId = req.user.id || req.session.user.id; // Asegúrate de tener el usuario autenticado
+            const Farm = require('../models/farm');
 
-            // 3. Verificar si el hash ya existe en la base de datos (deberás implementar la consulta)
-            // const existe = await selloModel.findOne({ where: { image_hash: imageHash } });
-            // if (existe) {
-            //     return res.status(409).json({ message: 'El sello ya está registrado.' });
-            // }
+            // 1. Verificar que la finca existe y pertenece al usuario
+            const farm = await Farm.findOne({ where: { id: farmId, owner_id: userId } });
+            if (!farm) {
+                return res.status(403).json({ message: 'No tienes permiso para modificar el sello de esta finca.' });
+            }
 
-            // 4. Guardar la imagen y el hash en la base de datos (deberás implementar la inserción)
-            // await selloModel.create({ ... });
+            // 2. Generar hash perceptual de la imagen
+            const hash = await new Promise((resolve, reject) => {
+                imageHash(file.path, 16, true, (error, data) => {
+                    if (error) reject(error);
+                    else resolve(data);
+                });
+            });
 
-            // 5. Responder éxito
-            res.status(201).json({ message: 'Sello cargado correctamente (lógica pendiente de implementar).' });
+            // 3. Verificar si el hash ya existe en otra finca
+            const existe = await Farm.findOne({ where: { seal_hash: hash, id: { $ne: farmId } } });
+            if (existe) {
+                return res.status(409).json({ message: 'El sello ya está registrado en otra finca.' });
+            }
+
+            // 4. Guardar la imagen y el hash en la finca
+            farm.seal_path = file.path;
+            farm.seal_hash = hash;
+            await farm.save();
+
+            res.status(201).json({ message: 'Sello cargado correctamente.' });
         } catch (error) {
             res.status(500).json({ message: 'Error al cargar el sello', error });
         }
