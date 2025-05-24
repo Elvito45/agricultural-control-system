@@ -1,0 +1,26 @@
+<html>
+  <head>
+    <title>Mis Fincas</title>
+    <!-- Aquí puedes agregar más metadatos o enlaces a hojas de estilo adicionales si es necesario -->
+  </head>
+  <body>
+    <h2>Mis Fincas</h2>
+    <% if (farms && farms.length > 0) { %>
+      <% farms.forEach(function(farm) { %>
+        <div class="farm-info" style="border:1px solid #b2d8b2; border-radius:8px; margin-bottom:15px; padding:12px; background:#f4fbf6;">
+          <strong>Nombre:</strong> <%= farm.name %><br>
+          <strong>Dirección:</strong> <%= farm.address %><br>
+          <strong>Estado:</strong> <%= farm.state_id %> | <strong>Municipio:</strong> <%= farm.town_id %><br>
+          <strong>Descripción:</strong> <%= farm.description %><br>
+          <strong>Ubicación:</strong> <%= farm.latitude %>, <%= farm.longitude %><br>
+          <strong>Registrada:</strong> <%= farm.created_at ? farm.created_at.toLocaleString ? farm.created_at.toLocaleString() : farm.created_at : '' %><br>
+          <a href="/farms/<%= farm.id %>/seal" class="btn">Gestionar sello</a>
+        </div>
+      <% }); %>
+    <% } else { %>
+      <div class="panel">
+        <p>No tienes fincas registradas.</p>
+      </div>
+    <% } %>
+  </body>
+</html>

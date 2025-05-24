@@ -3,295 +3,37 @@
 <head>
     <title>Panel de Control</title>
     <link rel="stylesheet" href="/css/styles.css">
-    <style>
-        body {
-            background: #e6f4ea;
-        }
-        nav {
-            background: #43a047;
-            padding: 18px 0;
-            text-align: center;
-            border-radius: 0 0 12px 12px;
-            margin-bottom: 30px;
-        }
-        nav span {
-            color: #fff;
-            font-weight: bold;
-            margin-right: 30px;
-            font-size: 18px;
-        }
-        nav a {
-            color: #fff;
-            background: #218c4a;
-            margin: 0 10px;
-            padding: 8px 18px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-size: 16px;
-            transition: background 0.2s;
-        }
-        nav a:hover {
-            background: #2e7031;
-        }
-        .dashboard-main {
-            max-width: 1000px;
-            margin: 30px auto 40px auto;
-            background: #d0ecd8;
-            border-radius: 12px;
-            box-shadow: 0 4px 24px rgba(44,62,80,0.10);
-            padding: 40px 30px 30px 30px;
-        }
-        .dashboard-top {
-            display: flex;
-            gap: 30px;
-            justify-content: space-between;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
-        }
-        .panel {
-            background: #fff;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(44,62,80,0.07);
-            padding: 30px 25px 25px 25px;
-            flex: 1 1 300px;
-            min-width: 270px;
-            max-width: 400px;
-        }
-        .panel h2 {
-            color: #218c4a;
-            margin-bottom: 18px;
-            text-align: center;
-        }
-        ul {
-            list-style: none;
-            padding: 0;
-            margin-bottom: 20px;
-        }
-        ul li {
-            margin-bottom: 8px;
-            color: #27613b;
-            font-size: 16px;
-        }
-        label {
-            display: block;
-            margin-top: 15px;
-            color: #27613b;
-            font-weight: bold;
-        }
-        input[type="text"], input[type="password"], input[type="number"], input[type="file"], select, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            margin-top: 6px;
-            border: 1px solid #b2d8b2;
-            border-radius: 5px;
-            font-size: 15px;
-            background: #f4fbf6;
-            margin-bottom: 10px;
-            transition: border 0.2s;
-        }
-        input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
-            border: 1.5px solid #43a047;
-            outline: none;
-        }
-        button {
-            background: #43a047;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            font-size: 17px;
-            font-weight: bold;
-            padding: 12px 0;
-            width: 100%;
-            margin-top: 18px;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        button:hover {
-            background: #2e7031;
-        }
-        #map {
-            border-radius: 8px;
-            margin-bottom: 15px;
-        }
-        .flash-message {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .flash-message.success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        .flash-message.error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        @media (max-width: 900px) {
-            .dashboard-main { padding: 10px 2vw; }
-            .dashboard-top { flex-direction: column; gap: 20px; }
-            .panel { max-width: 100%; }
-        }
-    </style>
 </head>
 <body>
     <div class="background-slider"></div>
 
-    <nav>
-        <span>Bienvenido, <%= user ? user.names : '' %> <%= user ? user.surnames : '' %></span>
-        <a href="/dashboard">Inicio</a>
-        <a href="/logout">Cerrar sesión</a>
-    </nav>
-
-    <div class="dashboard-main">
-        <% if (flash) { %>
-            <div class="flash-message <%= flash.type %>">
-                <%= flash.message %>
-            </div>
-        <% } %>
-        <div class="dashboard-top">
-            <div class="panel">
-                <h2>Información de contacto</h2>
-                <ul>
-                    <li><strong>Nombre:</strong> <%= user ? user.names : '' %> <%= user ? user.surnames : '' %></li>
-                    <li><strong>Email:</strong> <%= user ? user.email : '' %></li>
-                    <li><strong>Teléfono:</strong> <%= user ? user.phone : '' %></li>
-                </ul>
-            </div>
-            <div class="panel">
-                <h2>Cambiar contraseña</h2>
-                <form action="/api/auth/change-password" method="POST">
-                    <label for="currentPassword">Contraseña actual:</label>
-                    <input type="password" name="currentPassword" required>
-                    <label for="newPassword">Nueva contraseña:</label>
-                    <input type="password" name="newPassword" required>
-                    <button type="submit">Cambiar contraseña</button>
-                </form>
-            </div>
+    <% if (flash) { %>
+        <div class="flash-message <%= flash.type %>">
+            <%= flash.message %>
         </div>
-
-        <div class="panel" style="max-width:100%;margin-bottom:0;">
-            <h2>Registrar Finca</h2>
-            <form action="/api/farms" method="POST">
-                <label for="name">Nombre de la finca:</label>
-                <input type="text" name="name" required>
-
-                <label for="address">Dirección:</label>
-                <input id="address" type="search" name="address" required autocomplete="off">
-                <input type="hidden" id="latitude" name="latitude">
-                <input type="hidden" id="longitude" name="longitude">
-                <input type="hidden" id="maps_url" name="maps_url">
-                <div id="map" style="height: 250px; width: 100%; margin-top:10px;"></div>
-
-                <label for="state_id">Estado:</label>
-                <select name="state_id" id="state_id" required>
-                    <option value="">Seleccione un estado</option>
-                    <% states.forEach(function(state) { %>
-                        <option value="<%= state.id %>"><%= state.name %></option>
-                    <% }); %>
-                </select>
-
-                <label for="town_id">Municipio:</label>
-                <select name="town_id" id="town_id" required>
-                    <option value="">Seleccione un municipio</option>
-                </select>
-
-                <label for="description">Descripción:</label>
-                <textarea name="description"></textarea>
-
-                <label for="quantity">Cantidad de ganado:</label>
-                <input type="number" name="quantity" required>
-
-                <button type="submit">Registrar finca</button>
+    <% } %>
+    <div class="dashboard-top">
+        <div class="panel">
+            <h2>Información de contacto</h2>
+            <ul>
+                <li><strong>Nombre:</strong> <%= user ? user.names : '' %> <%= user ? user.surnames : '' %></li>
+                <li><strong>Email:</strong> <%= user ? user.email : '' %></li>
+                <li><strong>Teléfono:</strong> <%= user ? user.phone : '' %></li>
+            </ul>
+        </div>
+        <div class="panel">
+            <h2>Cambiar contraseña</h2>
+            <form action="/api/auth/change-password" method="POST">
+                <label for="currentPassword">Contraseña actual:</label>
+                <input type="password" name="currentPassword" required>
+                <label for="newPassword">Nueva contraseña:</label>
+                <input type="password" name="newPassword" required>
+                <button type="submit">Cambiar contraseña</button>
             </form>
         </div>
-
-        <% if (farms && farms.length > 0) { %>
-        <div class="panel" style="max-width:100%;margin-bottom:0;">
-            <h2>Agregar/Modificar Sello de Finca</h2>
-            <form action="/api/farms/<%= farms[0].id %>/seal" method="POST" enctype="multipart/form-data">
-                <label for="seal">Subir sello (hierro) del ganado:</label>
-                <input type="file" name="seal" accept="image/*" required>
-                <button type="submit">Agregar/Modificar sello</button>
-            </form>
-        </div>
-        <% } %>
     </div>
+    <% if (typeof farms !== 'undefined' && farms && farms.length > 0) { %>
 
-    <script>
-        document.getElementById('address').addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-            }
-        });
-
-        document.getElementById('state_id').addEventListener('change', function() {
-            var stateId = this.value;
-            var townSelect = document.getElementById('town_id');
-            townSelect.innerHTML = '<option value="">Cargando...</option>';
-            if(stateId) {
-                fetch('/api/towns?state_id=' + stateId)
-                    .then(res => res.json())
-                    .then(function(data) {
-                        townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
-                        data.forEach(function(town) {
-                            townSelect.innerHTML += `<option value="${town.id}">${town.name}</option>`;
-                        });
-                    });
-            } else {
-                townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
-            }
-        });
-
-        let map, marker, autocomplete;
-        function initMap() {
-            const defaultLatLng = { lat: 8.0, lng: -66.0 };
-            map = new google.maps.Map(document.getElementById('map'), {
-                center: defaultLatLng,
-                zoom: 6
-            });
-            marker = new google.maps.Marker({
-                position: defaultLatLng,
-                map: map,
-                draggable: true
-            });
-            autocomplete = new google.maps.places.Autocomplete(document.getElementById('address'));
-            autocomplete.bindTo('bounds', map);
-            autocomplete.addListener('place_changed', function() {
-                const place = autocomplete.getPlace();
-                if (!place.geometry) return;
-                map.setCenter(place.geometry.location);
-                map.setZoom(15);
-                marker.setPosition(place.geometry.location);
-                updateLatLngInputs(place.geometry.location.lat(), place.geometry.location.lng());
-            });
-            marker.addListener('dragend', function() {
-                const pos = marker.getPosition();
-                updateLatLngInputs(pos.lat(), pos.lng());
-            });
-        }
-        function updateLatLngInputs(lat, lng) {
-            document.getElementById('latitude').value = lat;
-            document.getElementById('longitude').value = lng;
-            document.getElementById('maps_url').value = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
-        }
-        window.onload = function() { initMap(); }
-
-        const images = [
-            'img/ganado 2.jpg',
-            'img/ganado 3.jpg'
-        ];
-        let current = 0;
-        const slider = document.querySelector('.background-slider');
-        function changeBackground() {
-            slider.style.backgroundImage = `url('${images[current]}')`;
-            current = (current + 1) % images.length;
-        }
-        changeBackground();
-        setInterval(changeBackground, 4000); // Cambia cada 4 segundos
-    </script>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPo92x7xE_8rl4ydg_WYoxGny-lpd3XdQ&libraries=places"></script>
+    <% } %>
 </body>
 </html>

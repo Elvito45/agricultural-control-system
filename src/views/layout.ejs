@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title || 'Panel de Control' %></title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <% if (typeof extraHead !== 'undefined') { %>
+        <%- extraHead %>
+    <% } %>
+</head>
+<body>
+    <div class="background-slider"></div>
+    <nav>
+        <% if (typeof user !== 'undefined' && user) { %>
+            <span>Bienvenido, <%= user.names %> <%= user.surnames %></span>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/farms">Mis Fincas</a>
+            <a href="/register-farm">Registrar Finca</a>
+            <a href="/api/auth/logout">Cerrar sesión</a>
+        <% } %>
+    </nav>
+    <div class="dashboard-main">
+        <%- body %>
+    </div>
+    <% if (typeof extraScripts !== 'undefined') { %>
+        <%- extraScripts %>
+    <% } %>
+</body>
+</html>

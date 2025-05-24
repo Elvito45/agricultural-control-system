@@ -48,6 +48,16 @@ class AuthController {
             res.status(500).json({ message: 'DB error', err });
         }
     }
+
+    async logout(req, res) {
+        req.session.destroy(err => {
+            if (err) {
+                return res.status(500).send('Error al cerrar sesión');
+            }
+            res.clearCookie('connect.sid');
+            res.redirect('/login');
+        });
+    }
 }
 
 module.exports = AuthController;

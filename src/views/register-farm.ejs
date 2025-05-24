@@ -1,0 +1,104 @@
+<% if (flash) { %>
+    <div class="flash-message <%= flash.type %>">
+        <%= flash.message %>
+    </div>
+<% } %>
+<div class="panel" style="max-width:100%;margin-bottom:0;">
+    <h2>Registrar nueva finca</h2>
+    <form id="farmForm" action="/api/farms" method="POST" style="margin-top:20px;">
+        <label for="name">Nombre de la finca:</label>
+        <input type="text" name="name" required>
+        <label for="address">Dirección:</label>
+        <input id="address" type="search" name="address" required autocomplete="off">
+        <input type="hidden" id="latitude" name="latitude">
+        <input type="hidden" id="longitude" name="longitude">
+        <input type="hidden" id="maps_url" name="maps_url">
+        <div id="map" style="height: 250px; width: 100%; margin-top:10px;"></div>
+        <label for="state_id">Estado:</label>
+        <select name="state_id" id="state_id" required>
+            <option value="">Seleccione un estado</option>
+            <% states.forEach(function(state) { %>
+                <option value="<%= state.id %>"><%= state.name %></option>
+            <% }); %>
+        </select>
+        <label for="town_id">Municipio:</label>
+        <select name="town_id" id="town_id" required>
+            <option value="">Seleccione un municipio</option>
+        </select>
+        <label for="description">Descripción:</label>
+        <textarea name="description"></textarea>
+        <label for="quantity">Cantidad de ganado:</label>
+        <input type="number" name="quantity" required>
+        <button type="submit">Registrar finca</button>
+    </form>
+</div>
+<script>
+document.getElementById('state_id').addEventListener('change', function() {
+    var stateId = this.value;
+    var townSelect = document.getElementById('town_id');
+    townSelect.innerHTML = '<option value="">Cargando...</option>';
+    if(stateId) {
+        fetch('/api/towns?state_id=' + stateId)
+            .then(res => res.json())
+            .then(function(data) {
+                townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
+                data.forEach(function(town) {
+                    townSelect.innerHTML += `<option value="${town.id}">${town.name}</option>`;
+                });
+            });
+    } else {
+        townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
+    }
+});
+let map, marker, autocomplete;
+function initMap() {
+    const defaultLatLng = { lat: 8.0, lng: -66.0 };
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: defaultLatLng,
+        zoom: 6
+    });
+    marker = new google.maps.Marker({
+        position: defaultLatLng,
+        map: map,
+        draggable: true,
+        visible: true
+    });
+    const addressInput = document.getElementById('address');
+    autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        fields: ["geometry", "formatted_address", "name"]
+    });
+    autocomplete.bindTo('bounds', map);
+    autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);
+        marker.setPosition(place.geometry.location);
+        marker.setVisible(true);
+        updateLatLngInputs(place.geometry.location.lat(), place.geometry.location.lng());
+        if (place.formatted_address) addressInput.value = place.formatted_address;
+    });
+    marker.addListener('dragend', function() {
+        const pos = marker.getPosition();
+        updateLatLngInputs(pos.lat(), pos.lng());
+    });
+}
+function updateLatLngInputs(lat, lng) {
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+    document.getElementById('maps_url').value = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+const images = [
+    'img/ganado 2.jpg',
+    'img/ganado 3.jpg'
+];
+let current = 0;
+const slider = document.querySelector('.background-slider');
+function changeBackground() {
+    slider.style.backgroundImage = `url('${images[current]}')`;
+    current = (current + 1) % images.length;
+}
+changeBackground();
+setInterval(changeBackground, 4000);
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPo92x7xE_8rl4ydg_WYoxGny-lpd3XdQ&libraries=places&callback=initMap" async defer></script>

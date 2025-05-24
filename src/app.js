@@ -5,6 +5,10 @@ const authRoutes = require('./routes/authRoutes');
 const farmRoutes = require('./routes/farmRoutes');
 const { checkAuth } = require('./middleware/authMiddleware');
 const expressSession = require('express-session');
+const expressLayouts = require('express-ejs-layouts');
+const uploadSeal = require('./middleware/uploadSeal');
+const { imageHash } = require('image-hash');
+const Farm = require('./models/farm');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,7 +16,12 @@ const PORT = process.env.PORT || 3000;
 // Configura EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.use(expressLayouts);
+app.set('layout', 'layout'); // layout.ejs por defecto
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Servir archivos estáticos de uploads (para imágenes de sellos)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Middleware
 app.use(bodyParser.json());
@@ -73,6 +82,115 @@ app.get('/dashboard', checkAuth, async (req, res) => {
         });
     } catch (err) {
         return res.status(500).send('Error al cargar los estados');
+    }
+});
+
+// Nueva ruta para ver listado de fincas
+app.get('/farms', checkAuth, async (req, res) => {
+    const Farm = require('./models/farm');
+    let farms = [];
+    try {
+        if (req.session.user) {
+            farms = await Farm.findAll({ where: { owner_id: req.session.user.id } });
+        }
+        res.render('farms', {
+            title: 'Mis Fincas',
+            user: req.session.user,
+            farms
+        });
+    } catch (err) {
+        res.status(500).send('Error al cargar las fincas');
+    }
+});
+
+// Nueva ruta para registrar finca
+app.get('/register-farm', checkAuth, async (req, res) => {
+    const sequelize = require('./config/db');
+    try {
+        const [states] = await sequelize.query('SELECT * FROM states ORDER BY name');
+        let flash = null;
+        if (req.session.flash) {
+            flash = req.session.flash;
+            delete req.session.flash;
+        }
+        res.render('register-farm', {
+            title: 'Registrar Finca',
+            user: req.session.user,
+            states,
+            flash
+        });
+    } catch (err) {
+        return res.status(500).send('Error al cargar los estados');
+    }
+});
+
+// Gestión de sello de finca
+app.get('/farms/:id/seal', checkAuth, async (req, res) => {
+    const farmId = req.params.id;
+    const Livestock = require('./models/livestock');
+    console.log('GET /farms/:id/seal called, farmId:', farmId);
+    try {
+        // Buscar el registro de livestock más reciente con sello para la finca
+        const livestock = await Livestock.findOne({
+            where: { farm_id: farmId, seal_path: { [require('sequelize').Op.ne]: null } },
+            order: [['created_at', 'DESC']]
+        });
+        console.log('Livestock encontrado:', livestock);
+        let flash = null;
+        if (req.session.flash) {
+            flash = req.session.flash;
+            delete req.session.flash;
+        }
+        res.render('farm-seal', { title: 'Gestionar sello', user: req.session.user, farmId, livestock, flash });
+    } catch (err) {
+        console.log('Error en GET /farms/:id/seal:', err);
+        res.status(500).send('Error al cargar el sello de la finca');
+    }
+});
+
+app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, res) => {
+    const farmId = req.params.id;
+    const Livestock = require('./models/livestock');
+    try {
+        if (!req.file) {
+            req.session.flash = { type: 'error', message: 'Debes subir una imagen de sello.' };
+            return res.redirect(`/farms/${farmId}/seal`);
+        }
+        // Calcular hash de la imagen
+        // Guardar la ruta relativa para mostrar correctamente la imagen
+        let seal_path = req.file.path;
+        // Convertir a ruta relativa desde 'public' si corresponde
+        if (seal_path.includes('public')) {
+            seal_path = seal_path.substring(seal_path.indexOf('public') + 7); // 7 = length of 'public/'
+        } else if (seal_path.includes('uploads')) {
+            // Si no está en public, pero sí en uploads
+            seal_path = seal_path.substring(seal_path.indexOf('uploads'));
+        }
+        const seal_hash = await new Promise((resolve, reject) => {
+            imageHash(req.file.path, 16, true, (error, data) => {
+                if (error) reject(error);
+                else resolve(data);
+            });
+        });
+        // Verificar unicidad del hash en livestock
+        const exists = await Livestock.findOne({ where: { seal_hash } });
+        if (exists) {
+            req.session.flash = { type: 'error', message: 'Este sello ya está registrado por otro productor.' };
+            return res.redirect(`/farms/${farmId}/seal`);
+        }
+        // Crear un nuevo registro de livestock con el sello
+        await Livestock.create({
+            farm_id: farmId,
+            quantity: 0, // o el valor que corresponda
+            description: 'Sello de finca',
+            seal_path,
+            seal_hash
+        });
+        req.session.flash = { type: 'success', message: 'Sello actualizado correctamente.' };
+        res.redirect(`/farms/${farmId}/seal`);
+    } catch (err) {
+        req.session.flash = { type: 'error', message: 'Error al guardar el sello.' };
+        res.redirect(`/farms/${farmId}/seal`);
     }
 });
 

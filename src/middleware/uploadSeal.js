@@ -1,20 +1,31 @@
 const multer = require('multer');
 const path = require('path');
 
+console.log('uploadSeal.js cargado');
+
 // Configuración de almacenamiento para los sellos
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, path.join(__dirname, '../uploads/seals'));
+        const dest = path.join(__dirname, '../uploads/seals');
+        cb(null, dest);
     },
     filename: function (req, file, cb) {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + path.extname(file.originalname));
+        // Usar un nombre corto: seal{farm_id}.ext
+        let ext = path.extname(file.originalname).toLowerCase();
+        if (!['.jpg', '.jpeg', '.png'].includes(ext)) {
+            ext = '.jpg'; // fallback
+        }
+        // farm_id puede venir en req.body o req.params
+        const farmId = req.body.farm_id || req.params.id || 'unknown';
+        const filename = `seal${farmId}${ext}`;
+        cb(null, filename);
     }
 });
 
 const fileFilter = (req, file, cb) => {
     // Solo permitir imágenes
-    if (file.mimetype.startsWith('image/')) {
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
         cb(new Error('Solo se permiten imágenes'), false);

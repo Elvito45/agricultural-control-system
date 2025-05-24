@@ -46,43 +46,12 @@ a:hover {
     color: #218c4a;
 }
 .login-form label {
-    display: block;
     text-align: left;
-    margin-bottom: 8px;
-    color: #27613b;
-    font-weight: bold;
 }
 .login-form input[type="text"],
 .login-form input[type="password"],
 .login-form input[type="email"] {
-    width: 100%;
-    padding: 10px 12px;
     margin-bottom: 18px;
-    border: 1px solid #b2d8b2;
-    border-radius: 5px;
-    font-size: 15px;
-    background: #f4fbf6;
-    transition: border 0.2s;
-}
-.login-form input[type="text"]:focus,
-.login-form input[type="password"]:focus {
-    border: 1.5px solid #43a047;
-    outline: none;
-}
-.login-form button {
-    width: 100%;
-    padding: 12px;
-    background: #43a047;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    font-size: 17px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-.login-form button:hover {
-    background: #2e7031;
 }
 .login-form .error-message {
     color: #e74c3c;
@@ -99,4 +68,132 @@ a:hover {
     background-size: cover;
     background-position: center;
     transition: background-image 1s ease-in-out;
+}
+/* Estilos del dashboard movidos desde dashboard.ejs */
+nav {
+    background: #43a047;
+    padding: 18px 0;
+    text-align: center;
+    border-radius: 0 0 12px 12px;
+    margin-bottom: 30px;
+}
+nav span {
+    color: #fff;
+    font-weight: bold;
+    margin-right: 30px;
+    font-size: 18px;
+}
+nav a {
+    color: #fff;
+    background: #218c4a;
+    margin: 0 10px;
+    padding: 8px 18px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-size: 16px;
+    transition: background 0.2s;
+}
+nav a:hover {
+    background: #2e7031;
+}
+.dashboard-main {
+    max-width: 1000px;
+    margin: 30px auto 40px auto;
+    background: #d0ecd8;
+    border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(44,62,80,0.10);
+    padding: 40px 30px 30px 30px;
+}
+.dashboard-top {
+    display: flex;
+    gap: 30px;
+    justify-content: space-between;
+    margin-bottom: 40px;
+    flex-wrap: wrap;
+}
+.panel {
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.07);
+    padding: 30px 25px 25px 25px;
+    flex: 1 1 300px;
+    min-width: 270px;
+    max-width: 400px;
+}
+.panel h2 {
+    color: #218c4a;
+    margin-bottom: 18px;
+    text-align: center;
+}
+ul {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+}
+ul li {
+    margin-bottom: 8px;
+    color: #27613b;
+    font-size: 16px;
+}
+label {
+    display: block;
+    margin-top: 15px;
+    color: #27613b;
+    font-weight: bold;
+}
+input[type="text"], input[type="password"], input[type="number"], input[type="file"], select, textarea {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    border: 1px solid #b2d8b2;
+    border-radius: 5px;
+    font-size: 15px;
+    background: #f4fbf6;
+    margin-bottom: 10px;
+    transition: border 0.2s;
+}
+input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus, textarea:focus, select:focus {
+    border: 1.5px solid #43a047;
+    outline: none;
+}
+button {
+    background: #43a047;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 17px;
+    font-weight: bold;
+    padding: 12px 0;
+    width: 100%;
+    margin-top: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+button:hover {
+    background: #2e7031;
+}
+#map {
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+.flash-message {
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+.flash-message.success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+.flash-message.error {
+    background-color: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+@media (max-width: 900px) {
+    .dashboard-main { padding: 10px 2vw; }
+    .dashboard-top { flex-direction: column; gap: 20px; }
+    .panel { max-width: 100%; }
 }
