@@ -21,7 +21,7 @@
     "sharp": "^0.34.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.7"
+    "nodemon": "^2.0.22"
   },
   "author": "Your Name",
   "license": "MIT"

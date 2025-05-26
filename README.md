@@ -1,71 +1,84 @@
 # Agricultural Control System
 
-This project is an Agricultural Control System designed to help producers manage their livestock and farm information efficiently. The system allows users to register unique seals or brands for their livestock and maintain detailed records about their farms.
+Este proyecto es un Sistema de Control Agrícola diseñado para ayudar a productores a gestionar información de sus fincas y ganado de manera eficiente. Permite registrar fincas, asociarlas a propietarios, estados y municipios, y gestionar sellos únicos para el ganado, garantizando autenticidad y trazabilidad.
 
-## Features
+## Características principales
 
-- User authentication with login and registration functionality.
-- Ability to create, retrieve, and update farm information.
-- Capability to register, retrieve, and update livestock details.
-- Secure access to routes using authentication middleware.
+- Autenticación de usuarios (registro e inicio de sesión).
+- Registro, consulta y actualización de información de fincas.
+- Asociación de fincas a estados y municipios (con JOINs para mostrar nombres).
+- Registro y gestión de ganado, incluyendo sellos únicos (imágenes).
+- Subida y procesamiento de imágenes de sellos con validación de unicidad mediante hash perceptual.
+- Visualización de la ubicación de la finca en mini-mapas de Google Maps.
+- Acceso seguro a rutas protegidas mediante middleware de autenticación.
 
-## Project Structure
+## Tecnologías utilizadas
+
+- **Node.js** y **Express** para el backend.
+- **EJS** para vistas dinámicas.
+- **Sequelize** como ORM para MySQL.
+- **Multer** para la subida de imágenes.
+- **Sharp** para procesamiento de imágenes.
+- **image-hash** para generación y comparación de hash perceptual de imágenes.
+- **Google Maps Embed** para mostrar la ubicación de las fincas.
+
+## Estructura del proyecto
 
 ```
 agricultural-control-system
 ├── src
 │   ├── controllers
-│   │   ├── authController.js
-│   │   ├── farmController.js
-│   │   └── livestockController.js
 │   ├── models
-│   │   ├── user.js
-│   │   ├── farm.js
-│   │   └── livestock.js
 │   ├── routes
-│   │   ├── authRoutes.js
-│   │   ├── farmRoutes.js
-│   │   └── livestockRoutes.js
 │   ├── config
-│   │   └── db.js
 │   ├── middleware
-│   │   └── authMiddleware.js
+│   ├── views
 │   └── app.js
+├── public
+│   └── css
+├── uploads
+│   └── seals
 ├── package.json
-└── README.md
+├── schema.sql
+├── README.md
 ```
 
-## Installation
+## Instalación
 
-1. Clone the repository:
+1. Clona el repositorio:
    ```
    git clone <repository-url>
    ```
-2. Navigate to the project directory:
+2. Ingresa al directorio del proyecto:
    ```
    cd agricultural-control-system
    ```
-3. Install the dependencies:
+3. Instala las dependencias:
    ```
    npm install
    ```
 
-## Usage
+## Uso
 
-1. Start the application:
+1. Inicia la aplicación en modo desarrollo (con recarga automática):
    ```
-   npm start
+   npm run dev
    ```
-2. Access the application at `http://localhost:3000`.
+2. Accede a la aplicación en `http://localhost:3000`.
 
-## Database Configuration
+## Configuración de la base de datos
 
-This project uses MySQL as the database. Ensure that you have a MySQL server running and update the database connection details in `src/config/db.js`.
+- El proyecto utiliza MySQL. Asegúrate de tener un servidor MySQL en ejecución y actualiza los datos de conexión en `src/config/db.js`.
+- Ejecuta el script `schema.sql` para crear las tablas necesarias.
+- Puedes poblar los estados y municipios con los scripts `states-dataset.sql` y `towns-dataset.sql`.
 
-## Contributing
+## Flujo de registro y autenticidad de sellos
 
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+- Los sellos (imágenes) se suben usando `multer`.
+- Se procesan con `sharp` para asegurar formato y tamaño.
+- Se genera un hash perceptual con `image-hash` para validar unicidad y autenticidad.
+- El hash se almacena en la base de datos y se compara para evitar duplicados.
 
-## License
+## Licencia
 
-This project is licensed under the MIT License.
+Este proyecto está licenciado bajo la Licencia MIT.

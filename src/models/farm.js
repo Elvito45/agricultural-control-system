@@ -1,5 +1,7 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
+const State = require('./state');
+const Town = require('./town');
 
 class Farm extends Model {}
 
@@ -67,5 +69,9 @@ Farm.init({
     tableName: 'farms',
     timestamps: false
 });
+
+// Asociaciones
+Farm.belongsTo(State, { foreignKey: 'state_id', as: 'state' });
+Farm.belongsTo(Town, { foreignKey: 'town_id', as: 'town' });
 
 module.exports = Farm;

@@ -8,7 +8,6 @@ const expressSession = require('express-session');
 const expressLayouts = require('express-ejs-layouts');
 const uploadSeal = require('./middleware/uploadSeal');
 const { imageHash } = require('image-hash');
-const Farm = require('./models/farm');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -51,47 +50,34 @@ app.use('/api/auth', authRoutes);
 
 // Ruta protegida: dashboard
 app.get('/dashboard', checkAuth, async (req, res) => {
-    const Farm = require('./models/farm');
-    const sequelize = require('./config/db');
-    // Obtener todos los estados usando Sequelize
-    try {
-        const [states] = await sequelize.query('SELECT * FROM states ORDER BY name');
-        let farms = [];
-        if (req.session.user) {
-            try {
-                // Buscar fincas del usuario autenticado
-                farms = await Farm.findAll({ where: { owner_id: req.session.user.id } });
-            } catch (farmErr) {
-                console.error('Error al buscar las fincas del usuario:', farmErr);
-                return res.status(500).send('Error al buscar las fincas del usuario: ' + farmErr.message);
-            }
-        }
-        // Mostrar mensaje flash si existe
-        let flash = null;
-        if (req.session.flash) {
-            flash = req.session.flash;
-            delete req.session.flash;
-        }
-        res.render('dashboard', {
-            title: 'Panel de Control',
-            user: req.session.user,
-            states,
-            towns: [], // Inicialmente vacío, se llenará por AJAX
-            farms,
-            flash
-        });
-    } catch (err) {
-        return res.status(500).send('Error al cargar los estados');
+    // Mostrar mensaje flash si existe
+    let flash = null;
+    if (req.session.flash) {
+        flash = req.session.flash;
+        delete req.session.flash;
     }
+    res.render('dashboard', {
+        title: 'Panel de Control',
+        user: req.session.user,
+        flash
+    });
 });
 
 // Nueva ruta para ver listado de fincas
 app.get('/farms', checkAuth, async (req, res) => {
     const Farm = require('./models/farm');
+    const State = require('./models/state');
+    const Town = require('./models/town');
     let farms = [];
     try {
         if (req.session.user) {
-            farms = await Farm.findAll({ where: { owner_id: req.session.user.id } });
+            farms = await Farm.findAll({
+                where: { owner_id: req.session.user.id },
+                include: [
+                    { model: State, as: 'state', attributes: ['name'] },
+                    { model: Town, as: 'town', attributes: ['name'] }
+                ]
+            });
         }
         res.render('farms', {
             title: 'Mis Fincas',
@@ -127,23 +113,22 @@ app.get('/register-farm', checkAuth, async (req, res) => {
 // Gestión de sello de finca
 app.get('/farms/:id/seal', checkAuth, async (req, res) => {
     const farmId = req.params.id;
-    const Livestock = require('./models/livestock');
-    console.log('GET /farms/:id/seal called, farmId:', farmId);
     try {
         // Buscar el registro de livestock más reciente con sello para la finca
+        const Livestock = require('./models/livestock');
+        const Farm = require('./models/farm');
+        const farm = await Farm.findByPk(farmId);
         const livestock = await Livestock.findOne({
             where: { farm_id: farmId, seal_path: { [require('sequelize').Op.ne]: null } },
             order: [['created_at', 'DESC']]
         });
-        console.log('Livestock encontrado:', livestock);
         let flash = null;
         if (req.session.flash) {
             flash = req.session.flash;
             delete req.session.flash;
         }
-        res.render('farm-seal', { title: 'Gestionar sello', user: req.session.user, farmId, livestock, flash });
+        res.render('farm-seal', { title: 'Gestionar sello', user: req.session.user, farmId, farmName: farm ? farm.name : '', livestock, flash });
     } catch (err) {
-        console.log('Error en GET /farms/:id/seal:', err);
         res.status(500).send('Error al cargar el sello de la finca');
     }
 });
