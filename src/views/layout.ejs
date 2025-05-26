@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title><%= title || 'Panel de Control' %></title>
+    <title><%= typeof title !== 'undefined' ? title : 'Panel de Control' %></title>
     <link rel="stylesheet" href="/css/styles.css">
     <% if (typeof extraHead !== 'undefined') { %>
         <%- extraHead %>
@@ -24,5 +24,20 @@
     <% if (typeof extraScripts !== 'undefined') { %>
         <%- extraScripts %>
     <% } %>
+    <script>
+    const images = [
+        '/img/ganado 2.jpg',
+        '/img/ganado 3.jpg'
+        // Agrega aquí más imágenes si tienes más en la carpeta img
+    ];
+    let current = 0;
+    const slider = document.querySelector('.background-slider');
+    function changeBackground() {
+        slider.style.backgroundImage = `url('${images[current]}')`;
+        current = (current + 1) % images.length;
+    }
+    changeBackground();
+    setInterval(changeBackground, 4000);
+    </script>
 </body>
 </html>
