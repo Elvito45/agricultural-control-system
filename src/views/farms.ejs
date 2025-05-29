@@ -6,31 +6,37 @@
   <body>
     <h2>Mis Fincas</h2>
     <% if (farms && farms.length > 0) { %>
-      <% farms.forEach(function(farm) { %>
-        <div class="farm-info" style="border:1px solid #b2d8b2; border-radius:8px; margin-bottom:15px; padding:12px; background:#f4fbf6;">
-          <strong>Nombre:</strong> <%= farm.name %><br>
-          <strong>Dirección:</strong> <%= farm.address %><br>
-          <strong>Estado:</strong> <%= farm.state ? farm.state.name : farm.state_id %> | <strong>Municipio:</strong> <%= farm.town ? farm.town.name : farm.town_id %><br>
-          <strong>Descripción:</strong> <%= farm.description %><br>
-          <br>
-          <% if (farm.latitude && farm.longitude) { %>
-            <iframe
-              width="250"
-              height="150"
-              frameborder="0"
-              style="border:0"
-              src="https://www.google.com/maps?q=<%= farm.latitude %>,<%= farm.longitude %>&z=15&output=embed"
-              allowfullscreen>
-            </iframe>
-          <% } else { %>
-            Google Maps no disponible.
-          <% } %><br>
-          <br>
-          <strong>Registrada:</strong> <%= farm.created_at ? farm.created_at.toLocaleString ? farm.created_at.toLocaleString() : farm.created_at : '' %><br>
-          <br>
-          <a href="/farms/<%= farm.id %>/seal" class="btn">Gestionar sello</a>
-        </div>
-      <% }); %>
+      <div class="farms-list">
+        <% farms.forEach(function(farm) { %>
+          <div class="farm-info">
+            <div class="farm-title"><%= farm.name %></div>
+            <div class="farm-address"><%= farm.address %></div>
+            <div class="farm-state">
+                <strong>Estado:</strong> <%= farm.state ? farm.state.name : farm.state_id %>
+                &nbsp;|&nbsp;
+                <strong>Municipio:</strong> <%= farm.town ? farm.town.name : farm.town_id %>
+            </div>
+            <div class="farm-description"><%= farm.description %></div>
+            <br>
+            <% if (farm.latitude && farm.longitude) { %>
+              <iframe
+                width="250"
+                height="150"
+                frameborder="0"
+                style="border:0"
+                src="https://www.google.com/maps?q=<%= farm.latitude %>,<%= farm.longitude %>&z=15&output=embed"
+                allowfullscreen>
+              </iframe>
+            <% } else { %>
+              Google Maps no disponible.
+            <% } %><br>
+            <br>
+            <strong>Registrada:</strong> <%= farm.created_at ? farm.created_at.toLocaleString ? farm.created_at.toLocaleString() : farm.created_at : '' %><br>
+            <br>
+            <a href="/farms/<%= farm.id %>/seal" class="btn">Gestionar sello</a>
+          </div>
+        <% }); %>
+      </div>
     <% } else { %>
       <div class="panel">
         <p>No tienes fincas registradas.</p>

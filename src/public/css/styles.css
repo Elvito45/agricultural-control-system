@@ -201,6 +201,58 @@ button:hover {
     color: #721c24;
     border: 1px solid #f5c6cb;
 }
+.farms-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    justify-content: flex-start; /* o center si prefieres centrar */
+    margin-bottom: 30px;
+}
+.farm-info {
+    min-width: 260px;
+    max-width: 320px;
+    flex: 1 1 260px;
+    box-sizing: border-box;
+    background: #f4fbf6;
+    border: 2px solid #b2d8b2;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+    padding: 18px 16px 16px 16px;
+    margin-bottom: 0;
+    transition: box-shadow 0.2s;
+}
+.farm-info:hover {
+    box-shadow: 0 4px 16px rgba(44,62,80,0.18);
+    border-color: #43a047;
+}
+.farm-title {
+    font-size: 1.35em;         /* Más grande */
+    font-weight: bold;         /* Negrita */
+    font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif; /* Fuente más bonita */
+    color: #218c4a;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+}
+.farm-address {
+    color: #27613b;
+    font-size: 1em;
+    margin-bottom: 6px;
+    font-style: italic;
+}
+.farm-state {
+    color: #43a047;
+    font-size: 0.98em;
+    margin-bottom: 6px;
+}
+.farm-description {
+    color: #27613b;
+    background: #e6f4ea;
+    border-radius: 6px;
+    padding: 8px 10px;
+    margin-bottom: 10px;
+    font-size: 0.97em;
+    min-height: 40px;
+}
 @media (max-width: 900px) {
     .dashboard-main { padding: 10px 2vw; }
     .dashboard-top { flex-direction: column; gap: 20px; }
