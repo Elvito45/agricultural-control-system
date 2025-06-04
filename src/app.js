@@ -75,14 +75,31 @@ app.get('/farms', checkAuth, async (req, res) => {
                 where: { owner_id: req.session.user.id },
                 include: [
                     { model: State, as: 'state', attributes: ['name'] },
-                    { model: Town, as: 'town', attributes: ['name'] }
+                    { model: Town, as: 'town', attributes: ['name'] },
+                    { model: require('./models/livestock'), as: 'livestock' }
                 ]
             });
+            // Ordenar y filtrar para mostrar solo el registro más reciente de livestock
+            farms = farms.map(farm => {
+                let quantity = 0;
+                if (farm.livestock && farm.livestock.length > 0) {
+                    // Buscar el registro más reciente
+                    const latest = farm.livestock.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
+                    quantity = latest.quantity;
+                }
+                return { ...farm.get({ plain: true }), quantity };
+            });
+        }
+        let flash = null;
+        if (req.session.flash) {
+            flash = req.session.flash;
+            delete req.session.flash;
         }
         res.render('farms', {
             title: 'Mis Fincas',
             user: req.session.user,
-            farms
+            farms,
+            flash
         });
     } catch (err) {
         res.status(500).send('Error al cargar las fincas');
@@ -135,15 +152,19 @@ app.get('/farms/:id/seal', checkAuth, async (req, res) => {
 
 app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, res) => {
     const farmId = req.params.id;
+    const userId = req.session.user.id;
     const Livestock = require('./models/livestock');
+    const Farm = require('./models/farm');
+
     try {
         if (!req.file) {
             req.session.flash = { type: 'error', message: 'Debes subir una imagen de sello.' };
             return res.redirect(`/farms/${farmId}/seal`);
         }
-        // Calcular hash de la imagen
+
         // Guardar la ruta relativa para mostrar correctamente la imagen
         let seal_path = req.file.path;
+        // console.log('Ruta original del archivo:', req.file.path);
         // Convertir a ruta relativa desde 'public' si corresponde
         if (seal_path.includes('public')) {
             seal_path = seal_path.substring(seal_path.indexOf('public') + 7); // 7 = length of 'public/'
@@ -151,31 +172,125 @@ app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, re
             // Si no está en public, pero sí en uploads
             seal_path = seal_path.substring(seal_path.indexOf('uploads'));
         }
-        const seal_hash = await new Promise((resolve, reject) => {
+        // console.log('Ruta relativa del sello:', seal_path);
+
+        // Verificar que la finca existe y pertenece al usuario
+        const farm = await Farm.findOne({ where: { id: farmId, owner_id: userId } });
+        console.log('Finca encontrada:', farm ? farm.id : null);
+        if (!farm) {
+            req.session.flash = { type: 'error', message: 'No tienes permiso para modificar el sello de esta finca.' };
+            return res.redirect(`/farms/${farmId}/seal`);
+        }
+
+        // Generar hash perceptual de la imagen
+        const hash = await new Promise((resolve, reject) => {
             imageHash(req.file.path, 16, true, (error, data) => {
                 if (error) reject(error);
                 else resolve(data);
             });
         });
+        // console.log('Hash generado:', hash);
+
         // Verificar unicidad del hash en livestock
-        const exists = await Livestock.findOne({ where: { seal_hash } });
+        const { Op } = require('sequelize');
+        const exists = await Livestock.findOne({ where: { seal_hash: hash, farm_id: { [Op.ne]: farmId } } });
+        // console.log('¿Hash ya existe en otra finca?:', exists ? exists.id : null);
         if (exists) {
             req.session.flash = { type: 'error', message: 'Este sello ya está registrado por otro productor.' };
             return res.redirect(`/farms/${farmId}/seal`);
         }
-        // Crear un nuevo registro de livestock con el sello
-        await Livestock.create({
-            farm_id: farmId,
-            quantity: 0, // o el valor que corresponda
-            description: 'Sello de finca',
-            seal_path,
-            seal_hash
-        });
+
+        // Log antes de actualizar
+        // console.log('Actualizando Livestock con:', { seal_path, seal_hash: hash, farm_id: farmId });
+        /* const [updatedRows] = */ await Livestock.update(
+            { seal_path: seal_path, seal_hash: hash },
+            { where: { farm_id: farmId } }
+        );
+        // console.log('Filas actualizadas:', updatedRows);
+
         req.session.flash = { type: 'success', message: 'Sello actualizado correctamente.' };
         res.redirect(`/farms/${farmId}/seal`);
     } catch (err) {
         req.session.flash = { type: 'error', message: 'Error al guardar el sello.' };
+        // console.log('Error en POST /farms/:id/seal:', err);
         res.redirect(`/farms/${farmId}/seal`);
+    }
+});
+
+// Nueva ruta: Editar información de la finca
+app.get('/farms/:id/edit', checkAuth, async (req, res) => {
+    const farmId = req.params.id;
+    const Farm = require('./models/farm');
+    const Livestock = require('./models/livestock');
+    const sequelize = require('./config/db');
+    try {
+        const farm = await Farm.findByPk(farmId);
+        if (!farm) return res.status(404).send('Finca no encontrada');
+        const [states] = await sequelize.query('SELECT * FROM states ORDER BY name');
+        const [towns] = await sequelize.query('SELECT * FROM towns WHERE state_id = ? ORDER BY name', { replacements: [farm.state_id] });
+        // Buscar cantidad de ganado actual
+        const livestock = await Livestock.findOne({ where: { farm_id: farmId }, order: [['created_at', 'DESC']] });
+        if (livestock) farm.quantity = livestock.quantity;
+        let flash = null;
+        if (req.session.flash) {
+            flash = req.session.flash;
+            delete req.session.flash;
+        }
+        res.render('edit-farm', {
+            title: 'Editar Finca',
+            user: req.session.user,
+            farm,
+            states,
+            towns,
+            flash
+        });
+    } catch (err) {
+        res.status(500).send('Error al cargar la información de la finca');
+    }
+});
+
+app.post('/farms/:id/edit', checkAuth, async (req, res) => {
+    const farmId = req.params.id;
+    const Farm = require('./models/farm');
+    const Livestock = require('./models/livestock');
+    try {
+        const { name, address, state_id, town_id, description, maps_url, latitude, longitude, quantity } = req.body;
+        console.log('POST /farms/:id/edit', { farmId, name, address, state_id, town_id, description, maps_url, latitude, longitude, quantity });
+        // Validar que los campos requeridos existen
+        if (!name || !state_id || !town_id) {
+            req.session.flash = { type: 'error', message: 'Faltan campos obligatorios.' };
+            return res.redirect(`/farms/${farmId}/edit`);
+        }
+        // Actualizar datos de la finca
+        const [updated] = await Farm.update(
+            { name, address, state_id, town_id, description, maps_url, latitude, longitude },
+            { where: { id: farmId } }
+        );
+        console.log('Farm.update result:', updated);
+        if (!updated && quantity == '0') {
+            req.session.flash = { type: 'error', message: 'No se pudo actualizar la finca.' };
+            return res.redirect(`/farms/${farmId}/edit`);
+        }
+        // Actualizar cantidad de ganado en el registro más reciente de livestock para la finca
+        if (typeof quantity !== 'undefined' && quantity !== null && quantity !== '') {
+            const livestock = await Livestock.findOne({ where: { farm_id: farmId }, order: [['created_at', 'DESC']] });
+            console.log('Livestock encontrado para update:', livestock);
+            if (livestock) {
+                livestock.quantity = quantity;
+                await livestock.save();
+                console.log('Cantidad de ganado actualizada en livestock:', quantity);
+            } else {
+                // Si no existe, crear uno nuevo
+                await Livestock.create({ farm_id: farmId, quantity, description: 'Registro automático por edición de finca' });
+                console.log('Nuevo registro de livestock creado con cantidad:', quantity);
+            }
+        }
+        req.session.flash = { type: 'success', message: 'Finca actualizada correctamente.' };
+        res.redirect('/farms');
+    } catch (err) {
+        console.log('Error en POST /farms/:id/edit:', err);
+        req.session.flash = { type: 'error', message: 'Error al actualizar la finca.' };
+        res.redirect(`/farms/${farmId}/edit`);
     }
 });
 

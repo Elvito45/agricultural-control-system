@@ -1,0 +1,91 @@
+<% if (flash) { %>
+    <div class="flash-message <%= flash.type %>" style="margin-bottom:10px;"> <%= flash.message %> </div>
+<% } %>
+<div class="panel" style="max-width:100%;margin-bottom:0;">
+    <h2>Editar información de la finca</h2>
+    <form id="farmEditForm" action="/farms/<%= farm.id %>/edit" method="POST" style="margin-top:20px;">
+        <label for="name">Nombre de la finca:</label>
+        <input type="text" name="name" value="<%= farm.name %>" required>
+        <label for="address">Dirección:</label>
+        <input id="address" type="search" name="address" value="<%= farm.address %>" required autocomplete="off">
+        <input type="hidden" id="latitude" name="latitude" value="<%= farm.latitude %>">
+        <input type="hidden" id="longitude" name="longitude" value="<%= farm.longitude %>">
+        <input type="hidden" id="maps_url" name="maps_url" value="<%= farm.maps_url %>">
+        <div id="map" style="height: 250px; width: 100%; margin-top:10px;"></div>
+        <label for="state_id">Estado:</label>
+        <select name="state_id" id="state_id" required>
+            <% states.forEach(function(state) { %>
+                <option value="<%= state.id %>" <%= farm.state_id == state.id ? 'selected' : '' %>><%= state.name %></option>
+            <% }); %>
+        </select>
+        <label for="town_id">Municipio:</label>
+        <select name="town_id" id="town_id" required>
+            <% towns.forEach(function(town) { %>
+                <option value="<%= town.id %>" <%= farm.town_id == town.id ? 'selected' : '' %>><%= town.name %></option>
+            <% }); %>
+        </select>
+        <label for="description">Descripción:</label>
+        <textarea name="description"><%= farm.description %></textarea>
+        <label for="quantity">Cantidad de ganado:</label>
+        <input type="number" name="quantity" value="<%= typeof farm.quantity !== 'undefined' ? farm.quantity : '' %>" required>
+        <button type="submit">Guardar cambios</button>
+    </form>
+</div>
+<script>
+document.getElementById('state_id').addEventListener('change', function() {
+    var stateId = this.value;
+    var townSelect = document.getElementById('town_id');
+    townSelect.innerHTML = '<option value="">Cargando...</option>';
+    if(stateId) {
+        fetch('/api/towns?state_id=' + stateId)
+            .then(res => res.json())
+            .then(function(data) {
+                townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
+                data.forEach(function(town) {
+                    townSelect.innerHTML += `<option value="${town.id}">${town.name}</option>`;
+                });
+            });
+    } else {
+        townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
+    }
+});
+let map, marker, autocomplete;
+function initMap() {
+    const defaultLatLng = { lat: 8.0, lng: -66.0 };
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: defaultLatLng,
+        zoom: 6
+    });
+    marker = new google.maps.Marker({
+        position: defaultLatLng,
+        map: map,
+        draggable: true,
+        visible: true
+    });
+    const addressInput = document.getElementById('address');
+    autocomplete = new google.maps.places.Autocomplete(addressInput, {
+        fields: ["geometry", "formatted_address", "name"]
+    });
+    autocomplete.bindTo('bounds', map);
+    autocomplete.addListener('place_changed', function() {
+        const place = autocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) return;
+        map.setCenter(place.geometry.location);
+        map.setZoom(15);
+        marker.setPosition(place.geometry.location);
+        marker.setVisible(true);
+        updateLatLngInputs(place.geometry.location.lat(), place.geometry.location.lng());
+        if (place.formatted_address) addressInput.value = place.formatted_address;
+    });
+    marker.addListener('dragend', function() {
+        const pos = marker.getPosition();
+        updateLatLngInputs(pos.lat(), pos.lng());
+    });
+}
+function updateLatLngInputs(lat, lng) {
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+    document.getElementById('maps_url').value = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+}
+</script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPo92x7xE_8rl4ydg_WYoxGny-lpd3XdQ&libraries=places&callback=initMap" async defer></script>
