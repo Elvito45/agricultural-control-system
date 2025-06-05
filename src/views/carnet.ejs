@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title><%= title %></title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .carnet-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 80vh;
+        }
+        .carnet {
+            width: 400px;
+            border: 2px solid #2c3e50;
+            border-radius: 16px;
+            background: #f8f8f8;
+            box-shadow: 0 4px 16px rgba(44,62,80,0.15);
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+        }
+        .carnet-logo {
+            width: 80px;
+            margin-bottom: 12px;
+        }
+        .carnet-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .carnet-info {
+            text-align: left;
+            margin: 18px 0 10px 0;
+        }
+        .carnet-info strong {
+            color: #34495e;
+        }
+        .carnet-footer {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 18px;
+        }
+        .carnet-qr {
+            margin-top: 10px;
+        }
+        @media print {
+            body * { visibility: hidden; }
+            .carnet, .carnet * { visibility: visible; }
+            .carnet { position: absolute; left: 0; top: 0; }
+        }
+    </style>
+</head>
+<body>
+    <% var pdfMode = typeof pdfMode !== 'undefined' ? pdfMode : false; %>
+    <div class="carnet-container">
+        <div class="carnet">
+            <img src="/img/logo_aso.png" alt="Logo" class="carnet-logo">
+            <div class="carnet-title">Carnet Productor Ganadero</div>
+            <% if (user.photo_path) { %>
+                <div style="margin-bottom: 10px;">
+                    <img src="/<%= user.photo_path.replace(/\\/g, '/') %>" alt="Foto carnet" style="width:80px;height:100px;object-fit:cover;border-radius:8px;border:1px solid #888;">
+                </div>
+            <% } else { %>
+                <form action="/dashboard/carnet/foto" method="POST" enctype="multipart/form-data" style="margin-bottom: 16px;">
+                    <label for="photo">Sube tu foto tipo carnet (obligatorio):</label><br>
+                    <input type="file" name="photo" id="photo" accept="image/*" required onchange="previewPhoto(event)">
+                    <div id="photo-preview-container" style="margin:8px 0;"></div>
+                    <button type="submit">Subir foto</button>
+                </form>
+                <script>
+                function previewPhoto(event) {
+                    const container = document.getElementById('photo-preview-container');
+                    container.innerHTML = '';
+                    const file = event.target.files[0];
+                    if (file) {
+                        const img = document.createElement('img');
+                        img.style.width = '80px';
+                        img.style.height = '100px';
+                        img.style.objectFit = 'cover';
+                        img.style.borderRadius = '8px';
+                        img.style.border = '1px solid #888';
+                        img.alt = 'Preview';
+                        img.src = URL.createObjectURL(file);
+                        container.appendChild(img);
+                    }
+                }
+                </script>
+                <div style="color:#c00;font-weight:bold;">Debes subir una foto tipo carnet para emitir tu carnet.</div>
+            <% } %>
+            <div class="carnet-info">
+                <p><strong>Nombre:</strong> <%= user.names %> <%= user.surnames %></p>
+                <p><strong>ID:</strong> <%= user.id %></p>
+                <p><strong>Email:</strong> <%= user.email %></p>
+                <p><strong>Teléfono:</strong> <%= user.phone %></p>
+                <p><strong>Fecha de registro:</strong> <%= user.created_at ? user.created_at.toLocaleDateString('es-MX') : '' %></p>
+            </div>
+            <div class="carnet-qr">
+                <% if (qr) { %>
+                    <img src="<%= qr %>" alt="QR Productor Ganadero" width="90" height="90">
+                <% } %>
+            </div>
+            <div class="carnet-footer">
+                Avalado por el Estado - Sistema de Control Ganadero<br>
+                <% if (!pdfMode && user.photo_path) { %>
+                <a href="/dashboard/carnet/pdf" class="btn">Exportar a PDF</a>
+                <button onclick="window.print()">Imprimir Carnet</button>
+                <% } %>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

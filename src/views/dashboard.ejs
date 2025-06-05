@@ -14,12 +14,17 @@
     <% } %>
     <div class="dashboard-top">
         <div class="panel">
-            <h2>Información de contacto</h2>
-            <ul>
-                <li><strong>Nombre:</strong> <%= user ? user.names : '' %> <%= user ? user.surnames : '' %></li>
-                <li><strong>Email:</strong> <%= user ? user.email : '' %></li>
-                <li><strong>Teléfono:</strong> <%= user ? user.phone : '' %></li>
-            </ul>
+            <h2>Información del usuario</h2>
+            <form action="/dashboard/update-user" method="POST">
+                <ul>
+                    <li><strong>ID (Identificación oficial):</strong> <input type="text" name="id" value="<%= user ? user.id : '' %>" readonly></li>
+                    <li><strong>Nombres:</strong> <input type="text" name="names" value="<%= user ? user.names : '' %>" required></li>
+                    <li><strong>Apellidos:</strong> <input type="text" name="surnames" value="<%= user ? user.surnames : '' %>" required></li>
+                    <li><strong>Email:</strong> <input type="email" name="email" value="<%= user ? user.email : '' %>" required></li>
+                    <li><strong>Teléfono:</strong> <input type="text" name="phone" value="<%= user ? user.phone : '' %>"></li>
+                </ul>
+                <button type="submit">Actualizar información</button>
+            </form>
         </div>
         <div class="panel">
             <h2>Cambiar contraseña</h2>
@@ -30,6 +35,10 @@
                 <input type="password" name="newPassword" required>
                 <button type="submit">Cambiar contraseña</button>
             </form>
+        </div>
+        <div class="panel">
+            <h2>Mi Carnet de Productor Ganadero</h2>
+            <a href="/dashboard/carnet" class="btn">Ver carnet</a>
         </div>
     </div>
 </body>

@@ -29,6 +29,10 @@ Owner.init({
         type: DataTypes.STRING(255),
         allowNull: false
     },
+    photo_path: {
+        type: DataTypes.STRING(255),
+        allowNull: true
+    },
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW

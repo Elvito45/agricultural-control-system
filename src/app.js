@@ -8,6 +8,8 @@ const expressSession = require('express-session');
 const expressLayouts = require('express-ejs-layouts');
 const uploadSeal = require('./middleware/uploadSeal');
 const { imageHash } = require('image-hash');
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -34,6 +36,27 @@ app.use(expressSession({
     cookie: { secure: false } // Cambia a true si usas HTTPS
 }));
 
+// Configuración de multer para fotos de carnet
+const photosDir = path.join(__dirname, 'public', 'uploads', 'photos');
+if (!fs.existsSync(photosDir)) {
+    fs.mkdirSync(photosDir, { recursive: true });
+    console.log('Directorio de fotos creado:', photosDir);
+} else {
+    console.log('Directorio de fotos ya existe:', photosDir);
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        console.log('Entrando a destination de Multer');
+        cb(null, photosDir);
+    },
+    filename: function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        cb(null, req.session.user.id + '_photo' + ext);
+    }
+});
+const uploadPhoto = multer({ storage });
+
 // Rutas públicas (vistas)
 app.get('/', (req, res) => {
     res.render('index', { title: 'Inicio' });
@@ -50,17 +73,45 @@ app.use('/api/auth', authRoutes);
 
 // Ruta protegida: dashboard
 app.get('/dashboard', checkAuth, async (req, res) => {
-    // Mostrar mensaje flash si existe
     let flash = null;
     if (req.session.flash) {
         flash = req.session.flash;
         delete req.session.flash;
     }
+    const User = require('./models/user');
+    let user = null;
+    try {
+        user = await User.findByPk(req.session.user.id);
+    } catch (e) {
+        user = req.session.user;
+    }
     res.render('dashboard', {
         title: 'Panel de Control',
-        user: req.session.user,
+        user,
         flash
     });
+});
+
+app.post('/dashboard/update-user', checkAuth, async (req, res) => {
+    const User = require('./models/user');
+    const { id, names, surnames, email, phone } = req.body;
+    try {
+        const [updated] = await User.update(
+            { names, surnames, email, phone },
+            { where: { id } }
+        );
+        if (updated) {
+            // Actualizar sesión
+            const user = await User.findByPk(id);
+            req.session.user = user;
+            req.session.flash = { type: 'success', message: 'Información actualizada correctamente.' };
+        } else {
+            req.session.flash = { type: 'error', message: 'No se pudo actualizar la información.' };
+        }
+    } catch (err) {
+        req.session.flash = { type: 'error', message: 'Error al actualizar la información.' };
+    }
+    res.redirect('/dashboard');
 });
 
 // Nueva ruta para ver listado de fincas
@@ -292,6 +343,88 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
         req.session.flash = { type: 'error', message: 'Error al actualizar la finca.' };
         res.redirect(`/farms/${farmId}/edit`);
     }
+});
+
+// Carnet de productor ganadero
+app.get('/dashboard/carnet', checkAuth, async (req, res) => {
+    const User = require('./models/user');
+    const generateUserQR = require('./controllers/generateUserQR');
+    let user = null;
+    let qr = null;
+    try {
+        user = await User.findByPk(req.session.user.id);
+        qr = await generateUserQR(user);
+    } catch (e) {
+        user = req.session.user;
+        qr = null;
+    }
+    res.render('carnet', {
+        title: 'Carnet Productor Ganadero',
+        user,
+        qr
+    });
+});
+
+// Exportar carnet a PDF
+app.get('/dashboard/carnet/pdf', checkAuth, async (req, res) => {
+    const User = require('./models/user');
+    const generateUserQR = require('./controllers/generateUserQR');
+    const ejs = require('ejs');
+    const path = require('path');
+    const htmlPdf = require('html-pdf');
+    let user = null;
+    let qr = null;
+    try {
+        user = await User.findByPk(req.session.user.id);
+        qr = await generateUserQR(user);
+        // Renderizar HTML del carnet
+        const html = await ejs.renderFile(path.join(__dirname, 'views', 'carnet.ejs'), {
+            title: 'Carnet Productor Ganadero',
+            user,
+            qr,
+            pdfMode: true // Para ocultar el botón de exportar en el PDF
+        });
+        // Generar PDF
+        htmlPdf.create(html, { format: 'A4' }).toStream((err, stream) => {
+            if (err) return res.status(500).send('Error al generar PDF');
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'attachment; filename="carnet-productor.pdf"');
+            stream.pipe(res);
+        });
+    } catch (e) {
+        res.status(500).send('Error al generar el carnet PDF');
+    }
+});
+
+// Subida de foto tipo carnet
+app.post('/dashboard/carnet/foto', checkAuth, uploadPhoto.single('photo'), async (req, res) => {
+    const User = require('./models/user');
+    if (!req.file) {
+        console.log('No se recibió archivo en la petición');
+        req.session.flash = { type: 'error', message: 'Debes subir una foto válida.' };
+        return res.redirect('/dashboard/carnet');
+    }
+    // Guardar ruta relativa
+    let photo_path = req.file.path;
+    console.log('Ruta absoluta recibida:', req.file.path);
+    // Convertir a ruta relativa desde 'public' o 'src/public'
+    if (photo_path.includes('public')) {
+        photo_path = photo_path.substring(photo_path.indexOf('public') + 7); // 7 = length of 'public/'
+    }
+    // Quitar barra inicial si existe
+    if (photo_path.startsWith('/') || photo_path.startsWith('\\')) photo_path = photo_path.substring(1);
+    // Usar backslash para Windows
+    photo_path = photo_path.replace(/\//g, '\\');
+    console.log('Ruta relativa final a guardar:', photo_path);
+    try {
+        await User.update({ photo_path }, { where: { id: req.session.user.id } });
+        req.session.user.photo_path = photo_path;
+        req.session.flash = { type: 'success', message: 'Foto subida correctamente.' };
+    } catch (err) {
+        console.log('Error al guardar la foto en la base de datos:', err);
+        req.session.flash = { type: 'error', message: 'Error al guardar la foto.' };
+    }
+    res.redirect('/dashboard/carnet');
 });
 
 // Middleware de autenticación SOLO para rutas protegidas de API
