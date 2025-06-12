@@ -1,12 +1,18 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 
 console.log('uploadSeal.js cargado');
+
+// Asegura que la carpeta de destino exista
+const dest = path.join(__dirname, '../uploads/seals');
+if (!fs.existsSync(dest)) {
+    fs.mkdirSync(dest, { recursive: true });
+}
 
 // Configuración de almacenamiento para los sellos
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        const dest = path.join(__dirname, '../uploads/seals');
         cb(null, dest);
     },
     filename: function (req, file, cb) {

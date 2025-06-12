@@ -10,6 +10,7 @@ const uploadSeal = require('./middleware/uploadSeal');
 const { imageHash } = require('image-hash');
 const multer = require('multer');
 const fs = require('fs');
+const resemble = require('resemblejs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -178,7 +179,7 @@ app.get('/register-farm', checkAuth, async (req, res) => {
     }
 });
 
-// Gestión de sello de finca
+// Ruta GET del sello de finca
 app.get('/farms/:id/seal', checkAuth, async (req, res) => {
     const farmId = req.params.id;
     try {
@@ -191,21 +192,29 @@ app.get('/farms/:id/seal', checkAuth, async (req, res) => {
             order: [['created_at', 'DESC']]
         });
         let flash = null;
+        let similarSeals = null;
         if (req.session.flash) {
             flash = req.session.flash;
             delete req.session.flash;
         }
-        res.render('farm-seal', { title: 'Gestionar sello', user: req.session.user, farmId, farmName: farm ? farm.name : '', livestock, flash });
+        if (req.session.similarSeals) {
+            similarSeals = req.session.similarSeals;
+            delete req.session.similarSeals;
+        }
+        res.render('farm-seal', { title: 'Gestionar sello', user: req.session.user, farmId, farmName: farm ? farm.name : '', livestock, flash, similarSeals });
     } catch (err) {
         res.status(500).send('Error al cargar el sello de la finca');
     }
 });
 
+// Ruta POST de la gestion del sello de finca
 app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, res) => {
     const farmId = req.params.id;
     const userId = req.session.user.id;
     const Livestock = require('./models/livestock');
     const Farm = require('./models/farm');
+    const { Op } = require('sequelize');
+    const path = require('path');
 
     try {
         if (!req.file) {
@@ -215,55 +224,70 @@ app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, re
 
         // Guardar la ruta relativa para mostrar correctamente la imagen
         let seal_path = req.file.path;
-        // console.log('Ruta original del archivo:', req.file.path);
-        // Convertir a ruta relativa desde 'public' si corresponde
         if (seal_path.includes('public')) {
-            seal_path = seal_path.substring(seal_path.indexOf('public') + 7); // 7 = length of 'public/'
+            seal_path = seal_path.substring(seal_path.indexOf('public') + 7);
         } else if (seal_path.includes('uploads')) {
-            // Si no está en public, pero sí en uploads
             seal_path = seal_path.substring(seal_path.indexOf('uploads'));
         }
-        // console.log('Ruta relativa del sello:', seal_path);
 
         // Verificar que la finca existe y pertenece al usuario
         const farm = await Farm.findOne({ where: { id: farmId, owner_id: userId } });
-        console.log('Finca encontrada:', farm ? farm.id : null);
         if (!farm) {
             req.session.flash = { type: 'error', message: 'No tienes permiso para modificar el sello de esta finca.' };
             return res.redirect(`/farms/${farmId}/seal`);
         }
 
-        // Generar hash perceptual de la imagen
+        // 1. Comparar con Resemble.js contra sellos de otras fincas
+        const existingSeals = await Livestock.findAll({
+            where: { farm_id: { [Op.ne]: farmId }, seal_path: { [Op.ne]: null } }
+        });
+        const similarSeals = [];
+        for (const seal of existingSeals) {
+            let existingSealPath = seal.seal_path;
+            if (!existingSealPath.startsWith('uploads')) {
+                existingSealPath = 'uploads/' + existingSealPath.replace(/^.*uploads[\\\/]/, '');
+            }
+            const absSealPath = path.join(__dirname, existingSealPath);
+            const result = await new Promise((resolve) => {
+                resemble(req.file.path)
+                    .compareTo(absSealPath)
+                    .onComplete(resolve);
+            });
+            if (parseFloat(result.misMatchPercentage) < 15) { // Umbral (%) de diferencia
+                similarSeals.push(seal.seal_path);
+            }
+        }
+        if (similarSeals.length > 0) {
+            req.session.flash = { type: 'error', message: 'Este sello es muy similar a uno ya registrado por otro productor.' };
+            req.session.similarSeals = similarSeals;
+            return res.redirect(`/farms/${farmId}/seal`);
+        }
+        
+        // 2. Generar hash perceptual de la imagen
         const hash = await new Promise((resolve, reject) => {
             imageHash(req.file.path, 16, true, (error, data) => {
                 if (error) reject(error);
                 else resolve(data);
             });
         });
-        // console.log('Hash generado:', hash);
 
-        // Verificar unicidad del hash en livestock
-        const { Op } = require('sequelize');
+        // 3. Verificar unicidad del hash en livestock
         const exists = await Livestock.findOne({ where: { seal_hash: hash, farm_id: { [Op.ne]: farmId } } });
-        // console.log('¿Hash ya existe en otra finca?:', exists ? exists.id : null);
         if (exists) {
             req.session.flash = { type: 'error', message: 'Este sello ya está registrado por otro productor.' };
             return res.redirect(`/farms/${farmId}/seal`);
         }
 
-        // Log antes de actualizar
-        // console.log('Actualizando Livestock con:', { seal_path, seal_hash: hash, farm_id: farmId });
-        /* const [updatedRows] = */ await Livestock.update(
+        await Livestock.update(
             { seal_path: seal_path, seal_hash: hash },
             { where: { farm_id: farmId } }
         );
-        // console.log('Filas actualizadas:', updatedRows);
 
         req.session.flash = { type: 'success', message: 'Sello actualizado correctamente.' };
         res.redirect(`/farms/${farmId}/seal`);
+        
     } catch (err) {
         req.session.flash = { type: 'error', message: 'Error al guardar el sello.' };
-        // console.log('Error en POST /farms/:id/seal:', err);
         res.redirect(`/farms/${farmId}/seal`);
     }
 });
