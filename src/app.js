@@ -242,7 +242,7 @@ app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, re
             return res.redirect(`/farms/${farmId}/seal`);
         }
 
-        // 1. Comparar con Resemble.js contra sellos de otras fincas
+        // Comparar con Resemble.js contra sellos de otras fincas
         const existingSeals = await Livestock.findAll({
             where: { farm_id: { [Op.ne]: farmId }, seal_path: { [Op.ne]: null } }
         });
@@ -268,7 +268,7 @@ app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, re
             return res.redirect(`/farms/${farmId}/seal`);
         }
         
-        // 2. Generar hash perceptual de la imagen
+        // Generar hash perceptual de la imagen
         const hash = await new Promise((resolve, reject) => {
             imageHash(req.file.path, 16, true, (error, data) => {
                 if (error) reject(error);
@@ -276,7 +276,7 @@ app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, re
             });
         });
 
-        // 3. Verificar unicidad del hash en livestock
+        // Verificar unicidad del hash en livestock
         const exists = await Livestock.findOne({ where: { seal_hash: hash, farm_id: { [Op.ne]: farmId } } });
         if (exists) {
             req.session.flash = { type: 'error', message: 'Este sello ya está registrado por otro productor.' };
