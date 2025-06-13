@@ -69,6 +69,34 @@ class AuthController {
             res.redirect('/login');
         });
     }
+
+    async changePassword(req, res) {
+        const { currentPassword, newPassword } = req.body;
+        try {
+            const userId = req.session.user && req.session.user.id;
+            if (!userId) {
+                req.session.flash = { type: 'error', message: 'No autenticado.' };
+                return res.redirect('/login');
+            }
+            const user = await Owner.findOne({ where: { id: userId } });
+            if (!user) {
+                req.session.flash = { type: 'error', message: 'Usuario no encontrado.' };
+                return res.redirect('/login');
+            }
+            const valid = await bcrypt.compare(currentPassword, user.hash);
+            if (!valid) {
+                req.session.flash = { type: 'error', message: 'La contraseña actual es incorrecta.' };
+                return res.redirect('/dashboard');
+            }
+            const hashedPassword = await bcrypt.hash(newPassword, 10);
+            await user.update({ hash: hashedPassword });
+            req.session.flash = { type: 'success', message: 'Contraseña actualizada correctamente.' };
+            res.redirect('/dashboard');
+        } catch (err) {
+            req.session.flash = { type: 'error', message: 'Error al cambiar la contraseña.' };
+            res.redirect('/dashboard');
+        }
+    }
 }
 
 module.exports = AuthController;
