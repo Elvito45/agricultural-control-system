@@ -25,6 +25,10 @@
         <select name="town_id" id="town_id" required>
             <option value="">Seleccione un municipio</option>
         </select>
+        <label for="parroquia_id">Parroquia:</label>
+        <select name="parroquia_id" id="parroquia_id" required>
+            <option value="">Seleccione una parroquia</option>
+        </select>
         <label for="description">Descripción:</label>
         <textarea name="description"></textarea>
         <label for="quantity">Cantidad de ganado:</label>
@@ -50,6 +54,24 @@ document.getElementById('state_id').addEventListener('change', function() {
         townSelect.innerHTML = '<option value="">Seleccione un municipio</option>';
     }
 });
+document.getElementById('town_id').addEventListener('change', function() {
+    var townId = this.value;
+    var parroquiaSelect = document.getElementById('parroquia_id');
+    parroquiaSelect.innerHTML = '<option value="">Cargando...</option>';
+    if(townId) {
+        fetch('/api/parroquias?town_id=' + townId)
+            .then(res => res.json())
+            .then(function(data) {
+                parroquiaSelect.innerHTML = '<option value="">Seleccione una parroquia</option>';
+                data.forEach(function(parroquia) {
+                    parroquiaSelect.innerHTML += `<option value="${parroquia.id}">${parroquia.name}</option>`;
+                });
+            });
+    } else {
+        parroquiaSelect.innerHTML = '<option value="">Seleccione una parroquia</option>';
+    }
+});
+
 let map, marker, autocomplete;
 function initMap() {
     const defaultLatLng = { lat: 8.0, lng: -66.0 };
@@ -102,3 +124,4 @@ changeBackground();
 setInterval(changeBackground, 4000);
 </script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCPo92x7xE_8rl4ydg_WYoxGny-lpd3XdQ&libraries=places&callback=initMap" async defer></script>
+<script src="/js/parroquias.js"></script>

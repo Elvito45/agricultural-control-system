@@ -3,6 +3,7 @@ const sequelize = require('../config/db');
 const State = require('./state');
 const Town = require('./town');
 const Livestock = require('./livestock');
+const Parroquia = require('./parroquia');
 
 class Farm extends Model {}
 
@@ -44,6 +45,14 @@ Farm.init({
             key: 'id'
         }
     },
+    parroquia_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'parroquias',
+            key: 'id'
+        }
+    },
     description: {
         type: DataTypes.TEXT,
         allowNull: true
@@ -74,6 +83,7 @@ Farm.init({
 // Asociaciones
 Farm.belongsTo(State, { foreignKey: 'state_id', as: 'state' });
 Farm.belongsTo(Town, { foreignKey: 'town_id', as: 'town' });
+Farm.belongsTo(Parroquia, { foreignKey: 'parroquia_id', as: 'parroquia' });
 Farm.hasMany(Livestock, { foreignKey: 'farm_id', as: 'livestock' });
 
 module.exports = Farm;

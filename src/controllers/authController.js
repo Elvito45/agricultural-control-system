@@ -8,10 +8,16 @@ class AuthController {
         const { id, password } = req.body;
         try {
             const user = await Owner.findOne({ where: { id } });
-            if (!user) return res.status(401).render('login', { message: 'Usuario no encontrado' });
+            if (!user) {
+                req.session.flash = { type: 'error', message: 'Usuario no encontrado' };
+                return res.redirect('/login');
+            }
 
             const valid = await bcrypt.compare(password, user.hash);
-            if (!valid) return res.status(401).render('login', { message: 'Contraseña incorrecta' });
+            if (!valid) {
+                req.session.flash = { type: 'error', message: 'Contraseña incorrecta' };
+                return res.redirect('/login');
+            }
 
             const token = jwt.sign({ id: user.id, email: user.email }, 'your-secret-token', { expiresIn: '1h' });
             req.session.token = token;
@@ -24,7 +30,9 @@ class AuthController {
             };
             res.redirect('/dashboard');
         } catch (err) {
-            res.status(500).json({ message: 'DB error', err });
+            req.session.flash = { type: 'error', message: 'Error de base de datos' };
+            console.error('Login error:', err);
+            res.redirect('/login');
         }
     }
 
@@ -43,9 +51,12 @@ class AuthController {
                 phone,
                 hash: hashedPassword
             });
+            req.session.flash = { type: 'success', message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
             res.redirect('/login');
         } catch (err) {
-            res.status(500).json({ message: 'DB error', err });
+            req.session.flash = { type: 'error', message: 'Error de base de datos' };
+            console.error('Registration error:', err);
+            res.redirect('/register');
         }
     }
 

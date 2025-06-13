@@ -63,7 +63,12 @@ app.get('/', (req, res) => {
     res.render('index', { title: 'Inicio' });
 });
 app.get('/login', (req, res) => {
-    res.render('login', { title: 'Iniciar Sesión' });
+    let flash = null;
+    if (req.session.flash) {
+        flash = req.session.flash;
+        delete req.session.flash;
+    }
+    res.render('login', { title: 'Iniciar Sesión', flash });
 });
 app.get('/register', (req, res) => {
     res.render('register', { title: 'Registro de Usuario' });
@@ -303,6 +308,7 @@ app.get('/farms/:id/edit', checkAuth, async (req, res) => {
         if (!farm) return res.status(404).send('Finca no encontrada');
         const [states] = await sequelize.query('SELECT * FROM states ORDER BY name');
         const [towns] = await sequelize.query('SELECT * FROM towns WHERE state_id = ? ORDER BY name', { replacements: [farm.state_id] });
+        const [parroquias] = await sequelize.query('SELECT * FROM parroquias WHERE town_id = ? ORDER BY name', { replacements: [farm.town_id] });
         // Buscar cantidad de ganado actual
         const livestock = await Livestock.findOne({ where: { farm_id: farmId }, order: [['created_at', 'DESC']] });
         if (livestock) farm.quantity = livestock.quantity;
@@ -317,6 +323,7 @@ app.get('/farms/:id/edit', checkAuth, async (req, res) => {
             farm,
             states,
             towns,
+            parroquias,
             flash
         });
     } catch (err) {
@@ -329,7 +336,7 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
     const Farm = require('./models/farm');
     const Livestock = require('./models/livestock');
     try {
-        const { name, address, state_id, town_id, description, maps_url, latitude, longitude, quantity } = req.body;
+        const { name, address, state_id, town_id, parroquia_id, description, maps_url, latitude, longitude, quantity } = req.body;
         console.log('POST /farms/:id/edit', { farmId, name, address, state_id, town_id, description, maps_url, latitude, longitude, quantity });
         // Validar que los campos requeridos existen
         if (!name || !state_id || !town_id) {
@@ -338,7 +345,7 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
         }
         // Actualizar datos de la finca
         const [updated] = await Farm.update(
-            { name, address, state_id, town_id, description, maps_url, latitude, longitude },
+            { name, address, state_id, town_id, parroquia_id, description, maps_url, latitude, longitude },
             { where: { id: farmId } }
         );
         console.log('Farm.update result:', updated);
@@ -467,6 +474,21 @@ app.get('/api/towns', async (req, res) => {
             replacements: [stateId]
         });
         res.json(towns);
+    } catch (err) {
+        res.status(500).json([]);
+    }
+});
+
+// Endpoint para obtener parroquias por municipio (AJAX)
+app.get('/api/parroquias', async (req, res) => {
+    const sequelize = require('./config/db');
+    const townId = req.query.town_id;
+    if (!townId) return res.json([]);
+    try {
+        const [parroquias] = await sequelize.query('SELECT id, name FROM parroquias WHERE town_id = ? ORDER BY name', {
+            replacements: [townId]
+        });
+        res.json(parroquias);
     } catch (err) {
         res.status(500).json([]);
     }

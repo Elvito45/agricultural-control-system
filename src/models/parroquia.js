@@ -1,30 +1,30 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db');
 
-class Town extends Model {}
+class Parroquia extends Model {}
 
-Town.init({
+Parroquia.init({
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true
     },
-    state_id: {
+    town_id: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-            model: 'states',
+            model: 'towns',
             key: 'id'
         }
     },
     name: {
-        type: DataTypes.STRING(100),
+        type: DataTypes.STRING(250),
         allowNull: false
     }
 }, {
     sequelize,
-    modelName: 'Town',
-    tableName: 'towns',
+    modelName: 'Parroquia',
+    tableName: 'parroquias',
     timestamps: false
 });
 
-module.exports = Town;
+module.exports = Parroquia;

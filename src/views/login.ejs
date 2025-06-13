@@ -7,6 +7,9 @@
 <body>
     <div class="login-container">
         <h1>Iniciar Sesión</h1>
+        <% if (flash) { %>
+            <div class="flash-message <%= flash.type %>"><%= flash.message %></div>
+        <% } %>
         <% if (typeof message !== 'undefined') { %>
             <div class="error-message"><%= message %></div>
         <% } %>
