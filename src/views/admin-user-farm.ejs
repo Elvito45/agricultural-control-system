@@ -46,16 +46,18 @@
         </form>
         <hr>
         <h2>Fincas del Usuario</h2>
-        <% if (farm && farm.length > 0) { %>
+        <% if (farms && farms.length > 0) { %>
             <div class="farm-list">
-                <% farm.forEach(function(farm) { %>
+                <% farms.forEach(function(farm) { %>
                     <div class="farm-info">
                         <div class="farm-title"><%= farm.name %></div>
                         <div class="farm-address"><%= farm.address %></div>
                         <div class="farm-state">
-                            <strong>Estado:</strong> <%= farm.state_id %>
+                            <strong>Estado:</strong> <%= farm.state ? farm.state.name : farm.state_id %>
                             &nbsp;|&nbsp;
-                            <strong>Municipio:</strong> <%= farm.town_id %>
+                            <strong>Municipio:</strong> <%= farm.town ? farm.town.name : farm.town_id %>
+                            &nbsp;|&nbsp;
+                            <strong>Parroquia:</strong> <%= farm.parroquia ? farm.parroquia.name : farm.parroquia_id %>          
                             <br><br>
                             <strong>Cantidad de ganado:</strong> <%= typeof farm.quantity !== 'undefined' ? farm.quantity : 0 %>
                             <br>

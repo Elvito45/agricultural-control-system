@@ -18,6 +18,8 @@
                 <strong>Estado:</strong> <%= farm.state ? farm.state.name : farm.state_id %>
                 &nbsp;|&nbsp;
                 <strong>Municipio:</strong> <%= farm.town ? farm.town.name : farm.town_id %>
+                &nbsp;|&nbsp;
+                <strong>Parroquia:</strong> <%= farm.parroquia ? farm.parroquia.name : farm.parroquia_id %>
                 <br>
                 <br>
                 <strong>Cantidad de ganado:</strong> <%= typeof farm.quantity !== 'undefined' ? farm.quantity : 0 %>

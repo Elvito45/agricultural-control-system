@@ -1,7 +1,7 @@
 const { Sequelize } = require('sequelize');
 
 // Configura la instancia de Sequelize para MySQL
-const sequelize = new Sequelize('cattle', 'root', '', {
+const sequelize = new Sequelize('cattle', 'root', 'moisi', {
     host: 'localhost',
     dialect: 'mysql',
     logging: false // Puedes poner true para ver las queries en consola

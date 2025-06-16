@@ -125,6 +125,7 @@ app.get('/farms', checkAuth, async (req, res) => {
     const Farm = require('./models/farm');
     const State = require('./models/state');
     const Town = require('./models/town');
+    const Parroquia = require('./models/parroquia');
     let farms = [];
     try {
         if (req.session.user) {
@@ -133,6 +134,7 @@ app.get('/farms', checkAuth, async (req, res) => {
                 include: [
                     { model: State, as: 'state', attributes: ['name'] },
                     { model: Town, as: 'town', attributes: ['name'] },
+                    { model: Parroquia, as: 'parroquia', attributes: ['name'] },
                     { model: require('./models/livestock'), as: 'livestock' }
                 ]
             });
@@ -502,7 +504,12 @@ app.get('/admin-dashboard', adminAuth, async (req, res) => {
 // Ruta dinámica para ver y editar la información del usuario y su finca (admin)
 app.get('/admin/users/:id/farm', adminAuth, async (req, res) => {
     const sequelize = require('./config/db');
+    const Farm = require('./models/farm');
+    const State = require('./models/state');
+    const Town = require('./models/town');
+    const Parroquia = require('./models/parroquia');
     const userId = req.params.id;
+    let farms = [];
     try {
         const [userResults] = await sequelize.query('SELECT * FROM owners WHERE id = ?', {
             replacements: [userId]
@@ -511,10 +518,28 @@ app.get('/admin/users/:id/farm', adminAuth, async (req, res) => {
             return res.status(404).send('Usuario no encontrado');
         }
         const user = userResults[0];
-        const [farmResults] = await sequelize.query('SELECT * FROM farms WHERE owner_id = ?', {
-            replacements: [userId]
+        // Buscar fincas del usuario
+        farms = await Farm.findAll({
+            where: { owner_id: userResults[0]['id'] },
+            include: [
+                { model: State, as: 'state', attributes: ['name'] },
+                { model: Town, as: 'town', attributes: ['name'] },
+                { model: Parroquia, as: 'parroquia', attributes: ['name'] },
+                { model: require('./models/livestock'), as: 'livestock' }
+            ]
         });
-        res.render('admin-user-farm', { user, farm: farmResults, isAdmin: true });
+        // Ordenar y filtrar para mostrar solo el registro más reciente de livestock
+        farms = farms.map(farm => {
+            let quantity = 0;
+            if (farm.livestock && farm.livestock.length > 0) {
+                // Buscar el registro más reciente
+                const latest = farm.livestock.reduce((a, b) => new Date(a.created_at) > new Date(b.created_at) ? a : b);
+                quantity = latest.quantity;
+            }
+            return { ...farm.get({ plain: true }), quantity };
+        });
+        // Renderizar la vista con la información del usuario y sus fincas
+        res.render('admin-user-farm', { user, farms, isAdmin: true });
     } catch (err) {
         console.error('Error al obtener información del usuario o su finca:', err);
         res.status(500).send('Error interno del servidor');
