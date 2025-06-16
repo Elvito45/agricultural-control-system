@@ -160,6 +160,7 @@ app.get('/farms', checkAuth, async (req, res) => {
         });
     } catch (err) {
         res.status(500).send('Error al cargar las fincas');
+        console.error('Error al cargar las fincas:', err);
     }
 });
 
@@ -173,11 +174,22 @@ app.get('/register-farm', checkAuth, async (req, res) => {
             flash = req.session.flash;
             delete req.session.flash;
         }
+        let selectedUser = null;
+        if (req.query.user) {
+            // Buscar el usuario seleccionado por el admin
+            const [users] = await sequelize.query('SELECT * FROM owners WHERE id = ?', {
+                replacements: [req.query.user]
+            });
+            if (users.length > 0) {
+                selectedUser = users[0];
+            }
+        }
         res.render('register-farm', {
             title: 'Registrar Finca',
             user: req.session.user,
             states,
-            flash
+            flash,
+            selectedUser // Nuevo: usuario dueño si lo seleccionó el admin
         });
     } catch (err) {
         return res.status(500).send('Error al cargar los estados');
@@ -337,7 +349,6 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
     const Livestock = require('./models/livestock');
     try {
         const { name, address, state_id, town_id, parroquia_id, description, maps_url, latitude, longitude, quantity } = req.body;
-        console.log('POST /farms/:id/edit', { farmId, name, address, state_id, town_id, description, maps_url, latitude, longitude, quantity });
         // Validar que los campos requeridos existen
         if (!name || !state_id || !town_id) {
             req.session.flash = { type: 'error', message: 'Faltan campos obligatorios.' };
@@ -348,7 +359,6 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
             { name, address, state_id, town_id, parroquia_id, description, maps_url, latitude, longitude },
             { where: { id: farmId } }
         );
-        console.log('Farm.update result:', updated);
         if (!updated && quantity == '0') {
             req.session.flash = { type: 'error', message: 'No se pudo actualizar la finca.' };
             return res.redirect(`/farms/${farmId}/edit`);
@@ -356,21 +366,20 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
         // Actualizar cantidad de ganado en el registro más reciente de livestock para la finca
         if (typeof quantity !== 'undefined' && quantity !== null && quantity !== '') {
             const livestock = await Livestock.findOne({ where: { farm_id: farmId }, order: [['created_at', 'DESC']] });
-            console.log('Livestock encontrado para update:', livestock);
             if (livestock) {
                 livestock.quantity = quantity;
                 await livestock.save();
-                console.log('Cantidad de ganado actualizada en livestock:', quantity);
             } else {
-                // Si no existe, crear uno nuevo
                 await Livestock.create({ farm_id: farmId, quantity, description: 'Registro automático por edición de finca' });
-                console.log('Nuevo registro de livestock creado con cantidad:', quantity);
             }
         }
         req.session.flash = { type: 'success', message: 'Finca actualizada correctamente.' };
+        // Redirección especial si es admin
+        if (req.session.isAdmin && req.query.user) {
+            return res.redirect(`/admin/users/${req.query.user}/farm`);
+        }
         res.redirect('/farms');
     } catch (err) {
-        console.log('Error en POST /farms/:id/edit:', err);
         req.session.flash = { type: 'error', message: 'Error al actualizar la finca.' };
         res.redirect(`/farms/${farmId}/edit`);
     }
@@ -456,6 +465,86 @@ app.post('/dashboard/carnet/foto', checkAuth, uploadPhoto.single('photo'), async
         req.session.flash = { type: 'error', message: 'Error al guardar la foto.' };
     }
     res.redirect('/dashboard/carnet');
+});
+
+// --- Middleware para proteger rutas de administrador ---
+function adminAuth(req, res, next) {
+    if (req.session && req.session.isAdmin) {
+        return next();
+    }
+    res.redirect('/admin-login');
+}
+
+// --- Ruta GET para login de administrador ---
+app.get('/admin-login', (req, res) => {
+    res.render('admin-login', { title: 'Acceso Administrador' });
+});
+
+// --- Ruta POST para login de administrador ---
+app.post('/admin-login', (req, res) => {
+    const adminKey = req.body.adminKey;
+    // Cambia 'claveSuperSecreta' por tu clave real o usa variable de entorno
+    if (adminKey === 'claveSuperSecreta') {
+        req.session.isAdmin = true;
+        res.redirect('/admin-dashboard');
+    } else {
+        res.render('admin-login', { title: 'Acceso Administrador', error: 'Clave incorrecta' });
+    }
+});
+
+// --- Ruta GET para dashboard de administrador ---
+app.get('/admin-dashboard', adminAuth, async (req, res) => {
+    const sequelize = require('./config/db');
+    const [results] = await sequelize.query('SELECT * FROM owners');
+    res.render('admin-dashboard', { users: results, isAdmin: true });
+});
+
+// Ruta dinámica para ver y editar la información del usuario y su finca (admin)
+app.get('/admin/users/:id/farm', adminAuth, async (req, res) => {
+    const sequelize = require('./config/db');
+    const userId = req.params.id;
+    try {
+        const [userResults] = await sequelize.query('SELECT * FROM owners WHERE id = ?', {
+            replacements: [userId]
+        });
+        if (userResults.length === 0) {
+            return res.status(404).send('Usuario no encontrado');
+        }
+        const user = userResults[0];
+        const [farmResults] = await sequelize.query('SELECT * FROM farms WHERE owner_id = ?', {
+            replacements: [userId]
+        });
+        res.render('admin-user-farm', { user, farm: farmResults, isAdmin: true });
+    } catch (err) {
+        console.error('Error al obtener información del usuario o su finca:', err);
+        res.status(500).send('Error interno del servidor');
+    }
+});
+
+// Ruta para editar la información del usuario desde el panel admin
+app.post('/admin/users/:id/edit', adminAuth, (req, res) => {
+    const sequelize = require('./config/db');
+    const userId = req.params.id;
+    const { names, surnames, email, phone } = req.body;
+    try {
+         sequelize.query(
+            'UPDATE owners SET names = ?, surnames = ?, email = ?, phone = ? WHERE id = ?',
+            {
+                replacements: [names, surnames, email, phone, userId]
+            }
+        );
+        res.redirect(`/admin/users/${userId}/farm`);
+    } catch (err) {
+        console.error('Error al actualizar información del usuario:', err);
+        res.status(500).send('Error interno del servidor');
+    }
+});
+
+// --- Ruta para cerrar sesión de admin ---
+app.get('/logout', (req, res) => {
+    req.session.destroy(() => {
+        res.redirect('/');
+    });
 });
 
 // Middleware de autenticación SOLO para rutas protegidas de API

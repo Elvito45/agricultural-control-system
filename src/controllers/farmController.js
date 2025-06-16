@@ -15,9 +15,11 @@ class FarmController {
                 maps_url,
                 latitude,
                 longitude,
-                quantity // cantidad de ganado
+                quantity, // cantidad de ganado
+                owner_id: owner_id_from_form // Nuevo: puede venir del formulario
             } = req.body;
-            const owner_id = req.session.user.id;
+            // Usar owner_id del formulario si existe (admin), si no, el de la sesión
+            const owner_id = owner_id_from_form || req.session.user.id;
             const newFarm = await this.farmModel.create({
                 name,
                 address,
@@ -42,11 +44,21 @@ class FarmController {
                 });
             }
             req.session.flash = { type: 'success', message: 'Finca registrada correctamente.' };
-            res.redirect('/farms');
+            // Redirigir según si es admin o usuario normal
+            if (req.session.isAdmin && owner_id_from_form) {
+                res.redirect(`/admin/users/${owner_id}/farm`);
+            } else {
+                res.redirect('/farms');
+            }
         } catch (error) {
             req.session.flash = { type: 'error', message: 'Error al registrar la finca.' };
             console.error('Error creating farm:', error);
-            res.redirect('/farms');
+            // Redirigir según si es admin o usuario normal
+            if (req.session.isAdmin && req.body.owner_id) {
+                res.redirect(`/admin/users/${req.body.owner_id}/farm`);
+            } else {
+                res.redirect('/farms');
+            }
         }
     }
 

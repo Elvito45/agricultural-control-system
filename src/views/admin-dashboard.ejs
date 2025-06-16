@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Administrador</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body, .dashboard-main, table, th, td {
+            font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
+        }
+        .dashboard-main h1, .dashboard-main h2 {
+            color: #218c4a;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: #f4fbf6;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+            margin-top: 18px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 14px 10px;
+            text-align: left;
+        }
+        th {
+            background: #43a047;
+            color: #fff;
+            font-size: 1.08em;
+            font-weight: bold;
+        }
+        tr:nth-child(even) {
+            background: #e6f4ea;
+        }
+        tr:hover {
+            background: #c8e6c9;
+        }
+        .btn {
+            background: #43a047;
+            color: #fff;
+            padding: 7px 18px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: background 0.2s;
+            font-size: 1em;
+        }
+        .btn:hover {
+            background: #2e7031;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-slider"></div>
+    <nav>
+        <a href="/admin-dashboard">Inicio</a>
+        <a href="/logout">Cerrar sesión</a>
+    </nav>
+    <div class="dashboard-main">
+        <h1>Panel de Administración</h1>
+        <p>Desde aquí puedes gestionar usuarios, fincas y ganado.</p>
+        <h2>Usuarios</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombres</th>
+                    <th>Apellidos</th>
+                    <th>Teléfono</th>
+                    <th>Email</th>
+                    <th>Finca</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% users.forEach(function(user) { %>
+                <tr>
+                    <td><%= user.id %></td>
+                    <td><%= user.names %></td>
+                    <td><%= user.surnames %></td>
+                    <td><%= user.phone %></td>
+                    <td><%= user.email %></td>
+                    <td>
+                        <a href="/admin/users/<%= user.id %>/farm" class="btn">Ir</a>
+                    </td>
+                </tr>
+                <% }); %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

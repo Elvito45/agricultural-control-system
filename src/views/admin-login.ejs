@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Acceso Administrador</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="login-wrapper">
+        <div class="login-welcome">
+            <h2>Panel de Administración</h2>
+        </div>
+        <div class="login-form-container">
+            <% if (typeof error !== 'undefined' && error) { %>
+                <div class="error-message" style="color:#fff; background:#e74c3c; padding:10px; border-radius:6px; margin-bottom:18px; text-align:center;">
+                    <%= error %>
+                </div>
+            <% } %>
+            <form class="login-form" action="/admin-login" method="POST">
+                <label for="adminKey">Clave de administrador:</label>
+                <input type="password" id="adminKey" name="adminKey" required>
+                <button type="submit">Entrar</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

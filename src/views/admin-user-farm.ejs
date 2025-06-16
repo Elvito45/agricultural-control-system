@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Información y Finca del Usuario</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        .farm-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .farm-info {
+            flex: 0 0 340px;
+            background: #f4fbf6;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(44,62,80,0.08);
+            padding: 18px 16px;
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-slider"></div>
+    <nav>
+        <a href="/admin-dashboard">Inicio</a>
+        <a href="/logout">Cerrar sesión</a>
+    </nav>
+    <div class="dashboard-main">
+        <h1>Usuario: <%= user.names %> <%= user.surnames %></h1>
+        <form action="/admin/users/<%= user.id %>/edit" method="POST" class="admin-edit-user-form">
+            <label>ID:</label>
+            <input type="text" name="id" value="<%= user.id %>" readonly>
+            <label>Nombres:</label>
+            <input type="text" name="names" value="<%= user.names %>" required>
+            <label>Apellidos:</label>
+            <input type="text" name="surnames" value="<%= user.surnames %>" required>
+            <label>Email:</label>
+            <input type="email" name="email" value="<%= user.email %>" required>
+            <label>Teléfono:</label>
+            <input type="text" name="phone" value="<%= user.phone %>">
+            <button type="submit">Guardar cambios</button>
+        </form>
+        <hr>
+        <h2>Fincas del Usuario</h2>
+        <% if (farm && farm.length > 0) { %>
+            <div class="farm-list">
+                <% farm.forEach(function(farm) { %>
+                    <div class="farm-info">
+                        <div class="farm-title"><%= farm.name %></div>
+                        <div class="farm-address"><%= farm.address %></div>
+                        <div class="farm-state">
+                            <strong>Estado:</strong> <%= farm.state_id %>
+                            &nbsp;|&nbsp;
+                            <strong>Municipio:</strong> <%= farm.town_id %>
+                            <br><br>
+                            <strong>Cantidad de ganado:</strong> <%= typeof farm.quantity !== 'undefined' ? farm.quantity : 0 %>
+                            <br>
+                        </div>
+                        <div class="farm-description"><%= farm.description %></div>
+                        <br>
+                        <% if (farm.latitude && farm.longitude) { %>
+                          <iframe
+                            width="250"
+                            height="150"
+                            frameborder="0"
+                            style="border:0"
+                            src="https://www.google.com/maps?q=<%= farm.latitude %>,<%= farm.longitude %>&z=15&output=embed"
+                            allowfullscreen>
+                          </iframe>
+                        <% } else { %>
+                          Google Maps no disponible.
+                        <% } %><br>
+                        <br>
+                        <strong>Registrada:</strong> <%= farm.created_at ? farm.created_at.toLocaleString ? farm.created_at.toLocaleString() : farm.created_at : '' %><br>
+                        <br>
+                        <a href="/farms/<%= farm.id %>/seal" class="btn">Gestionar sello</a>
+                        <a href="/farms/<%= farm.id %>/edit" class="btn" style="margin-left:10px;background:#337ab7;color:#fff;">Editar información</a>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <p>Este usuario no tiene fincas registradas.</p>
+        <% } %>
+        <div style="margin-top: 32px; text-align: right;">
+            <a href="/register-farm?user=<%= user.id %>" class="btn" style="background:#43a047; color:#fff; font-weight:bold;">Agregar finca</a>
+        </div>
+    </div>
+</body>
+</html>

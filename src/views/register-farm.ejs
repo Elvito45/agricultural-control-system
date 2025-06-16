@@ -33,6 +33,12 @@
         <textarea name="description"></textarea>
         <label for="quantity">Cantidad de ganado:</label>
         <input type="number" name="quantity" required>
+        <% if (selectedUser) { %>
+            <input type="hidden" name="owner_id" value="<%= selectedUser.id %>">
+            <div class="info-box">
+                <strong>Registrando finca para:</strong> <%= selectedUser.names %> <%= selectedUser.surnames %> (<%= selectedUser.email %>)
+            </div>
+        <% } %>
         <button type="submit">Registrar finca</button>
     </form>
 </div>

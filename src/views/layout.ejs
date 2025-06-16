@@ -10,7 +10,7 @@
 <body>
     <div class="background-slider"></div>
     <nav>
-        <% if (typeof user !== 'undefined' && user) { %>
+        <% if (typeof user !== 'undefined' && user && !(typeof isAdmin !== 'undefined' && isAdmin)) { %>
             <span>Bienvenido, <%= user.names %> <%= user.surnames %></span>
             <a href="/dashboard">Dashboard</a>
             <a href="/farms">Mis Fincas</a>
