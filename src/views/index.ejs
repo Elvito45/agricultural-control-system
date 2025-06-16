@@ -3,13 +3,112 @@
 <head>
     <title>Sistema Agropecuario</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #43a047 0%, #a8e063 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            background: rgba(255,255,255,0.97);
+            border-radius: 24px;
+            box-shadow: 0 8px 32px rgba(44,62,80,0.18);
+            padding: 48px 36px 36px 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeInUp 1.2s cubic-bezier(.23,1.01,.32,1) both;
+            width: 420px;
+            max-width: 95vw;
+            min-height: 380px;
+            min-width: 320px;
+        }
+        h1 {
+            color: #218c4a;
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 32px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #a8e06333;
+            animation: slideIn 1.2s cubic-bezier(.23,1.01,.32,1) both;
+        }
+        a {
+            display: block;
+            width: 220px;
+            margin: 16px auto 0 auto;
+            padding: 14px 0;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #43a047 60%, #a8e063 100%);
+            color: #fff;
+            font-size: 1.15em;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            box-shadow: 0 2px 8px #43a04733;
+            transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+            letter-spacing: 0.5px;
+            animation: fadeInBtn 1.2s cubic-bezier(.23,1.01,.32,1) both;
+        }
+        a:hover {
+            background: linear-gradient(90deg, #388e3c 60%, #8bc34a 100%);
+            transform: translateY(-3px) scale(1.04);
+            box-shadow: 0 6px 18px #43a04744;
+        }
+        .btn {
+            background: linear-gradient(90deg, #218c4a 60%, #43a047 100%);
+            margin-top: 32px;
+            font-size: 1em;
+            letter-spacing: 1px;
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateY(-40px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeInBtn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .leaf {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            background: url('/img/logo_aso.png') no-repeat center/contain;
+            opacity: 0.13;
+            animation: floatLeaf 8s infinite linear;
+        }
+        .leaf.l1 { left: 8vw; top: 12vh; animation-delay: 0s; }
+        .leaf.l2 { left: 80vw; top: 18vh; animation-delay: 2s; }
+        .leaf.l3 { left: 30vw; top: 80vh; animation-delay: 4s; }
+        .leaf.l4 { left: 60vw; top: 70vh; animation-delay: 1.5s; }
+        .leaf.l5 { left: 50vw; top: 10vh; animation-delay: 3s; }
+        @keyframes floatLeaf {
+            0% { transform: translateY(0) rotate(0deg) scale(1); }
+            50% { transform: translateY(-30px) rotate(10deg) scale(1.08); }
+            100% { transform: translateY(0) rotate(-5deg) scale(1); }
+        }
+    </style>
 </head>
 <body>
+    <div class="leaf l1"></div>
+    <div class="leaf l2"></div>
+    <div class="leaf l3"></div>
+    <div class="leaf l4"></div>
+    <div class="leaf l5"></div>
     <div class="container">
         <h1>Bienvenido al Sistema de Control Agropecuario</h1>
         <a href="/login">Iniciar Sesión</a>
         <a href="/register">Registrarse</a>
-        <a href="/admin-login" class="btn">Admin</a>
+        <a href="/admin-login" class="btn">Acceso Administrador</a>
     </div>
 </body>
 </html>
