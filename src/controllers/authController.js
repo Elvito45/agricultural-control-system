@@ -39,9 +39,26 @@ class AuthController {
     async register(req, res) {
         const { id, names, surnames, email, phone, password } = req.body;
         try {
-            const exists = await Owner.findOne({ where: { [Op.or]: [{ id }, { email }] } });
-            if (exists) return res.status(400).json({ message: 'Propietario ya registrado' });
-
+            // Buscar si el ID ya está en uso
+            const idExists = await Owner.findOne({ where: { id } });
+            if (idExists) {
+                req.session.flash = { type: 'error', message: 'ID ya usado' };
+                return res.redirect('/register');
+            }
+            // Buscar si el correo ya está en uso
+            const emailExists = await Owner.findOne({ where: { email } });
+            if (emailExists) {
+                req.session.flash = { type: 'error', message: 'Correo electrónico ya usado' };
+                return res.redirect('/register');
+            }
+            // Buscar si el teléfono ya está en uso (si se ingresó)
+            if (phone) {
+                const phoneExists = await Owner.findOne({ where: { phone } });
+                if (phoneExists) {
+                    req.session.flash = { type: 'error', message: 'Teléfono ya usado' };
+                    return res.redirect('/register');
+                }
+            }
             const hashedPassword = await bcrypt.hash(password, 10);
             await Owner.create({
                 id,

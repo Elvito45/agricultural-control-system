@@ -71,7 +71,12 @@ app.get('/login', (req, res) => {
     res.render('login', { title: 'Iniciar Sesión', flash });
 });
 app.get('/register', (req, res) => {
-    res.render('register', { title: 'Registro de Usuario' });
+    let flash = null;
+    if (req.session.flash) {
+        flash = req.session.flash;
+        delete req.session.flash;
+    }
+    res.render('register', { title: 'Registro de Usuario', flash });
 });
 
 // Rutas de autenticación (públicas)

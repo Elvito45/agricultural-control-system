@@ -122,8 +122,8 @@
 <body>
     <div class="login-container">
         <h1>Registro de Usuario</h1>
-        <% if (typeof message !== 'undefined') { %>
-            <div class="error-message"><%= message %></div>
+        <% if (flash) { %>
+            <div class="flash-message <%= flash.type %>"><%= flash.message %></div>
         <% } %>
         <form class="login-form" action="/api/auth/register" method="POST">
             <label for="username">ID:</label>
