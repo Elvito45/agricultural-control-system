@@ -216,21 +216,44 @@ button:hover {
     border-radius: 8px;
     margin-bottom: 15px;
 }
+/* FLASH MESSAGE MODERNO Y BONITO */
 .flash-message {
-    padding: 10px;
-    border-radius: 5px;
-    margin-bottom: 20px;
+    padding: 18px 28px;
+    border-radius: 18px;
+    margin-bottom: 28px;
     text-align: center;
+    font-size: 1.18em;
+    font-family: 'Montserrat Black', 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
+    font-weight: 900;
+    letter-spacing: 1.1px;
+    box-shadow: 0 4px 24px rgba(44,62,80,0.13);
+    position: relative;
+    animation: popFlash 0.7s cubic-bezier(.23,1.01,.32,1) both;
+    border: none;
 }
 .flash-message.success {
-    background-color: #d4edda;
+    background: linear-gradient(90deg, #43e97b 0%, #38f9d7 100%);
     color: #155724;
-    border: 1px solid #c3e6cb;
+    border: none;
+    box-shadow: 0 4px 24px #43e97b33;
+}
+.flash-message.success::before {
+    content: '\2714';
+    font-size: 1.5em;
+    color: #218c4a;
+    margin-right: 12px;
+    vertical-align: middle;
+    font-weight: bold;
 }
 .flash-message.error {
-    background-color: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background: linear-gradient(90deg, #ff5858 0%, #f09819 100%);
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 24px #ff585833;
+}
+@keyframes popFlash {
+    0% { opacity: 0; transform: scale(0.85) translateY(30px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
 }
 .farms-list {
     display: flex;

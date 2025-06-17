@@ -376,10 +376,6 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
             }
         }
         req.session.flash = { type: 'success', message: 'Finca actualizada correctamente.' };
-        // Redirección especial si es admin
-        if (req.session.isAdmin && req.query.user) {
-            return res.redirect(`/admin/users/${req.query.user}/farm`);
-        }
         res.redirect('/farms');
     } catch (err) {
         req.session.flash = { type: 'error', message: 'Error al actualizar la finca.' };
