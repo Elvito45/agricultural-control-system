@@ -4,7 +4,11 @@
     <title>Dashboard Administrador</title>
     <link rel="stylesheet" href="/css/styles.css">
     <style>
-        body, .dashboard-main, table, th, td {
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(120deg, #e0eafc 0%, #cfecd0 100%);
             font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
         }
         .dashboard-main h1, .dashboard-main h2 {
@@ -54,7 +58,6 @@
     </style>
 </head>
 <body>
-    <div class="background-slider"></div>
     <nav>
         <a href="/admin-dashboard">Inicio</a>
         <a href="/logout">Cerrar sesión</a>

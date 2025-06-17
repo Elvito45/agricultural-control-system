@@ -3,6 +3,123 @@
 <head>
     <title>Iniciar Sesión</title>
     <link rel="stylesheet" href="/css/styles.css">
+    <style>
+        body {
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            background: #f4fbf6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif;
+            overflow: hidden;
+        }
+        .login-container {
+            background: rgba(255,255,255,0.98);
+            border-radius: 22px;
+            box-shadow: 0 8px 32px rgba(44,62,80,0.18), 0 1.5px 8px #43a04722;
+            padding: 44px 36px 36px 36px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: fadeInUp 1.2s cubic-bezier(.23,1.01,.32,1) both;
+            width: 420px;
+            max-width: 98vw;
+            /* Mantener altura, solo más ancho */
+        }
+        h1 {
+            color: #218c4a;
+            font-size: 2.1em;
+            font-weight: bold;
+            margin-bottom: 28px;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px #a8e06333;
+            animation: slideIn 1.2s cubic-bezier(.23,1.01,.32,1) both;
+        }
+        .login-form {
+            width: 100%;
+            max-width: 340px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        label {
+            color: #218c4a;
+            font-weight: 600;
+            margin-bottom: 2px;
+            font-size: 1em;
+        }
+        input[type="text"], input[type="password"] {
+            padding: 11px;
+            border-radius: 8px;
+            border: 1.5px solid #b2dfdb;
+            font-size: 1em;
+            background: #f4fbf6;
+            transition: border 0.2s, box-shadow 0.2s;
+            box-shadow: 0 1.5px 6px #43a04711;
+        }
+        input:focus {
+            border: 1.5px solid #43a047;
+            outline: none;
+            box-shadow: 0 2px 12px #43a04722;
+        }
+        button {
+            margin-top: 10px;
+            padding: 12px 0;
+            border-radius: 8px;
+            background: linear-gradient(90deg, #43a047 60%, #a8e063 100%);
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 8px #43a04733;
+            transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+            letter-spacing: 0.5px;
+            animation: fadeInBtn 1.2s cubic-bezier(.23,1.01,.32,1) both;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #388e3c 60%, #8bc34a 100%);
+            transform: translateY(-2px) scale(1.03);
+            box-shadow: 0 6px 18px #43a04744;
+        }
+        .flash-message, .error-message {
+            margin-bottom: 12px;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 500;
+            background: #ffe082;
+            color: #b71c1c;
+            box-shadow: 0 2px 8px #ffecb333;
+            animation: fadeInUp 0.8s;
+        }
+        a {
+            margin-top: 18px;
+            color: #218c4a;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.18s;
+        }
+        a:hover {
+            color: #43a047;
+            text-decoration: underline;
+        }
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(40px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateY(-40px) scale(0.95); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes fadeInBtn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
 </head>
 <body>
     <div class="login-container">
