@@ -160,6 +160,7 @@ app.get('/farms', checkAuth, async (req, res) => {
             flash = req.session.flash;
             delete req.session.flash;
         }
+
         res.render('farms', {
             title: 'Mis Fincas',
             user: req.session.user,
@@ -537,7 +538,14 @@ app.post('/admin-login', (req, res) => {
 app.get('/admin-dashboard', adminAuth, async (req, res) => {
     const sequelize = require('./config/db');
     const [results] = await sequelize.query('SELECT * FROM owners');
-    res.render('admin-dashboard', { users: results, isAdmin: true });
+
+    let flash = null;
+    if (req.session.flash) {
+        flash = req.session.flash;
+        delete req.session.flash;
+    }
+
+    res.render('admin-dashboard', { users: results, isAdmin: true, flash });
 });
 
 // Ruta dinámica para ver y editar la información del usuario y su finca (admin)

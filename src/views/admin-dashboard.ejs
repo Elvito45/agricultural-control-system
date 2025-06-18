@@ -60,12 +60,17 @@
 <body>
     <nav>
         <a href="/admin-dashboard">Inicio</a>
+        <a href="/register">Registrar Propietario</a>
         <a href="/logout">Cerrar sesión</a>
     </nav>
     <div class="dashboard-main">
+        <% if (flash) { %>
+            <div class="flash-message <%= flash.type %>"><%= flash.message %></div>
+        <% } %>
+        
         <h1>Panel de Administración</h1>
         <p>Desde aquí puedes gestionar usuarios, fincas y ganado.</p>
-        <h2>Usuarios</h2>
+        <h2>Propietarios</h2>
         <table>
             <thead>
                 <tr>
@@ -74,7 +79,7 @@
                     <th>Apellidos</th>
                     <th>Teléfono</th>
                     <th>Email</th>
-                    <th>Fincas</th>
+                    <th>Info./Fincas</th>
                     <th>Carnet</th>
                 </tr>
             </thead>

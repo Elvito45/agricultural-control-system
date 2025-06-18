@@ -68,7 +68,13 @@ class AuthController {
                 phone,
                 hash: hashedPassword
             });
-            req.session.flash = { type: 'success', message: 'Registro exitoso. Ahora puedes iniciar sesión.' };
+
+            if (req.session && req.session.isAdmin) {       
+                req.session.flash = { type: 'success', message: 'Registro de propietario exitoso!' };
+                return res.redirect('/admin-dashboard');
+            }
+
+            req.session.flash = { type: 'success', message: 'Registro de propietario exitoso!' };
             res.redirect('/login');
         } catch (err) {
             req.session.flash = { type: 'error', message: 'Error de base de datos' };

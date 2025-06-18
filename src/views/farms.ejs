@@ -42,8 +42,7 @@
             <br>
             <strong>Registrada:</strong> <%= farm.created_at ? farm.created_at.toLocaleString ? farm.created_at.toLocaleString() : farm.created_at : '' %><br>
             <br>
-            <a href="/farms/<%= farm.id %>/seal" class="btn">Gestionar sello</a>
-            <a href="/farms/<%= farm.id %>/edit" class="btn" style="margin-left:10px;background:#337ab7;color:#fff;">Editar información</a>
+            <a href="/farms/<%= farm.id %>/seal" class="btn">Ver sello</a>
           </div>
         <% }); %>
       </div>

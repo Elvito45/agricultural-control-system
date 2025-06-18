@@ -2,7 +2,7 @@
   <div class="flash-message <%= flash.type %>"><%= flash.message %></div>
 <% } %>
 <div class="panel" style="max-width:600px;margin:auto;">
-  <h2>Gestión de sello/hierro para la finca: <%= farmName %></h2>
+  <h2>Sello/hierro de: <%= farmName %></h2>
   <% if (livestock && livestock.seal_path) { %>
     <div style="margin-bottom:15px;">
       <strong>Sello actual:</strong><br>
@@ -11,22 +11,24 @@
   <% } else { %>
     <p>No hay sello registrado para esta finca.</p>
   <% } %>
-  <form action="/farms/<%= farmId %>/seal" method="POST" enctype="multipart/form-data">
-    <label for="seal">Subir nuevo sello (hierro):</label>
-    <div class="info" style="background:#f8f8f8;border:1px solid #b2d8b2;border-radius:6px;padding:10px;margin-bottom:10px;color:#333;font-size:0.97em;">
-      <strong>Requisitos del archivo:</strong>
-      <ul style="margin:6px 0 0 18px;padding:0;">
-        <li>Solo imágenes <b>JPG, JPEG o PNG</b></li>
-        <li>Peso máximo: <b>3MB</b></li>
-      </ul>
-    </div>
-    <input type="file" name="seal" id="sealInput" accept="image/jpeg,image/png" required>
-    <div id="previewContainer" style="margin:10px 0; display:none;">
-      <strong>Vista previa:</strong><br>
-      <img id="sealPreview" src="#" alt="Vista previa del sello" style="max-width:200px;max-height:200px; border:1px solid #ccc; border-radius:6px;" />
-    </div>
-    <button type="submit">Guardar sello</button>
-  </form>
+    <% if (isAdmin) { %>
+        <form action="/farms/<%= farmId %>/seal" method="POST" enctype="multipart/form-data">
+          <label for="seal">Subir nuevo sello (hierro):</label>
+          <div class="info" style="background:#f8f8f8;border:1px solid #b2d8b2;border-radius:6px;padding:10px;margin-bottom:10px;color:#333;font-size:0.97em;">
+            <strong>Requisitos del archivo:</strong>
+            <ul style="margin:6px 0 0 18px;padding:0;">
+              <li>Solo imágenes <b>JPG, JPEG o PNG</b></li>
+              <li>Peso máximo: <b>3MB</b></li>
+            </ul>
+          </div>
+          <input type="file" name="seal" id="sealInput" accept="image/jpeg,image/png" required>
+          <div id="previewContainer" style="margin:10px 0; display:none;">
+            <strong>Vista previa:</strong><br>
+            <img id="sealPreview" src="#" alt="Vista previa del sello" style="max-width:200px;max-height:200px; border:1px solid #ccc; border-radius:6px;" />
+          </div>
+          <button type="submit">Guardar sello</button>
+        </form>
+    <% } %>
 </div>
 <% if (typeof similarSeals !== 'undefined' && similarSeals && similarSeals.length > 0) { %>
   <div class="panel" style="max-width:600px;margin:20px auto 0 auto;background:#fffbe6;border:1px solid #ffe58f;padding:15px 20px 10px 20px;border-radius:8px;">
