@@ -74,7 +74,8 @@
                     <th>Apellidos</th>
                     <th>Teléfono</th>
                     <th>Email</th>
-                    <th>Finca</th>
+                    <th>Fincas</th>
+                    <th>Carnet</th>
                 </tr>
             </thead>
             <tbody>
@@ -86,8 +87,11 @@
                     <td><%= user.phone %></td>
                     <td><%= user.email %></td>
                     <td>
-                        <a href="/admin/users/<%= user.id %>/farm" class="btn">Ir</a>
+                        <a href="/admin/users/<%= user.id %>/farm" class="btn">Ver</a>
                     </td>
+                    <td>
+                        <a href="dashboard/carnet/<%= user.id %>" class="btn">Ver</a>
+                    </td>                   
                 </tr>
                 <% }); %>
             </tbody>

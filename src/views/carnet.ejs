@@ -45,10 +45,30 @@
         .carnet-qr {
             margin-top: 10px;
         }
+        .print-btn-container {
+            width: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+        }
+        .no-print {
+            width: auto;
+            display: inline-block;
+            padding: 10px 24px;
+            background: #2c3e50;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            margin-top: 8px;
+        }
         @media print {
             body * { visibility: hidden; }
             .carnet, .carnet * { visibility: visible; }
             .carnet { position: absolute; left: 0; top: 0; }
+            .no-print, .print-btn-container { display: none !important; }
         }
     </style>
 </head>
@@ -63,7 +83,7 @@
                     <img src="/<%= user.photo_path.replace(/\\/g, '/') %>" alt="Foto carnet" style="width:80px;height:100px;object-fit:cover;border-radius:8px;border:1px solid #888;">
                 </div>
             <% } else { %>
-                <form action="/dashboard/carnet/foto" method="POST" enctype="multipart/form-data" style="margin-bottom: 16px;">
+                <form action="/dashboard/carnet/<%= user.id %>/foto" method="POST" enctype="multipart/form-data" style="margin-bottom: 16px;">
                     <label for="photo">Sube tu foto tipo carnet (obligatorio):</label><br>
                     <input type="file" name="photo" id="photo" accept="image/*" required onchange="previewPhoto(event)">
                     <div id="photo-preview-container" style="margin:8px 0;"></div>
@@ -103,12 +123,15 @@
             </div>
             <div class="carnet-footer">
                 Avalado por el Estado - Sistema de Control Ganadero<br>
-                <% if (!pdfMode && user.photo_path) { %>
-                <a href="/dashboard/carnet/pdf" class="btn">Exportar a PDF</a>
-                <button onclick="window.print()">Imprimir Carnet</button>
-                <% } %>
             </div>
         </div>
+
+    </div>
+    <div class="print-btn-container">
+    <% if (!pdfMode && user.photo_path) { %>
+    <!-- <a href="/dashboard/carnet/<%= user.id %>/pdf" class="btn">Exportar a PDF</a> -->
+    <button onclick="window.print()" class="no-print">Imprimir Carnet</button>
+    <% } %>
     </div>
 </body>
 </html>

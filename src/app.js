@@ -53,7 +53,8 @@ const storage = multer.diskStorage({
     },
     filename: function (req, file, cb) {
         const ext = path.extname(file.originalname);
-        cb(null, req.session.user.id + '_photo' + ext);
+        userId = req.params.id || req.session.user.id;
+        cb(null, userId + '_photo' + ext);
     }
 });
 const uploadPhoto = multer({ storage });
@@ -225,7 +226,12 @@ app.get('/farms/:id/seal', checkAuth, async (req, res) => {
             similarSeals = req.session.similarSeals;
             delete req.session.similarSeals;
         }
-        res.render('farm-seal', { title: 'Gestionar sello', user: req.session.user, farmId, farmName: farm ? farm.name : '', livestock, flash, similarSeals });
+        // Verificar si el usuario es admin
+        let isAdmin = false;
+        if (req.session && req.session.isAdmin) {
+            isAdmin = true;
+        }
+        res.render('farm-seal', { title: 'Gestionar sello', user: req.session.user || farm.owner_id, farmId, farmName: farm ? farm.name : '', livestock, flash, similarSeals, isAdmin });
     } catch (err) {
         res.status(500).send('Error al cargar el sello de la finca');
     }
@@ -234,9 +240,12 @@ app.get('/farms/:id/seal', checkAuth, async (req, res) => {
 // Ruta POST de la gestion del sello de finca
 app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, res) => {
     const farmId = req.params.id;
-    const userId = req.session.user.id;
+
     const Livestock = require('./models/livestock');
     const Farm = require('./models/farm');
+    const farm = await Farm.findByPk(farmId);
+
+    const userId = farm.owner_id || req.session.user.id;
     const { Op } = require('sequelize');
     const path = require('path');
 
@@ -320,6 +329,8 @@ app.post('/farms/:id/seal', checkAuth, uploadSeal.single('seal'), async (req, re
 app.get('/farms/:id/edit', checkAuth, async (req, res) => {
     const farmId = req.params.id;
     const Farm = require('./models/farm');
+    const farm = await Farm.findByPk(farmId);
+    const owner = farm.owner_id || req.session.user;
     const Livestock = require('./models/livestock');
     const sequelize = require('./config/db');
     try {
@@ -336,14 +347,22 @@ app.get('/farms/:id/edit', checkAuth, async (req, res) => {
             flash = req.session.flash;
             delete req.session.flash;
         }
+
+        // Verificar si el usuario es admin
+        let isAdmin = false;
+        if (req.session && req.session.isAdmin) {
+            isAdmin = true;
+        }
+
         res.render('edit-farm', {
             title: 'Editar Finca',
-            user: req.session.user,
+            user: owner,
             farm,
             states,
             towns,
             parroquias,
-            flash
+            flash,
+            isAdmin
         });
     } catch (err) {
         res.status(500).send('Error al cargar la información de la finca');
@@ -353,6 +372,8 @@ app.get('/farms/:id/edit', checkAuth, async (req, res) => {
 app.post('/farms/:id/edit', checkAuth, async (req, res) => {
     const farmId = req.params.id;
     const Farm = require('./models/farm');
+    const farm = await Farm.findByPk(farmId);
+    const owner = farm.owner_id;
     const Livestock = require('./models/livestock');
     try {
         const { name, address, state_id, town_id, parroquia_id, description, maps_url, latitude, longitude, quantity } = req.body;
@@ -380,36 +401,53 @@ app.post('/farms/:id/edit', checkAuth, async (req, res) => {
                 await Livestock.create({ farm_id: farmId, quantity, description: 'Registro automático por edición de finca' });
             }
         }
+        if (req.session && req.session.isAdmin) {
+            req.session.flash = { type: 'success', message: 'Finca actualizada correctamente.' };
+            return res.redirect(`/admin/users/${owner}/farm`);
+        }
         req.session.flash = { type: 'success', message: 'Finca actualizada correctamente.' };
         res.redirect('/farms');
     } catch (err) {
         req.session.flash = { type: 'error', message: 'Error al actualizar la finca.' };
+        console.error('Error al actualizar la finca:', err);
         res.redirect(`/farms/${farmId}/edit`);
     }
 });
 
 // Carnet de productor ganadero
-app.get('/dashboard/carnet', checkAuth, async (req, res) => {
+app.get('/dashboard/carnet/:id', checkAuth, async (req, res) => {
     const User = require('./models/user');
+    const owner = req.params.id;
     const generateUserQR = require('./controllers/generateUserQR');
     let user = null;
     let qr = null;
-    try {
-        user = await User.findByPk(req.session.user.id);
-        qr = await generateUserQR(user);
-    } catch (e) {
-        user = req.session.user;
-        qr = null;
+    let isAdmin = false;
+    // Verificar si el usuario es admin
+    if (req.session && req.session.isAdmin) {
+        user = await User.findByPk(owner);
+        isAdmin = true;
+        qr = await generateUserQR(owner);
+    } else {
+        try {
+            user = await User.findByPk(req.session.user.id);
+            qr = await generateUserQR(user);
+        } catch (e) {
+            console.error('Error al obtener el usuario:', e);
+            req.session.flash = { type: 'error', message: 'Error al cargar el carnet.' };
+            return res.redirect('/dashboard');
+        }
     }
+
     res.render('carnet', {
         title: 'Carnet Productor Ganadero',
         user,
-        qr
+        qr,
+        isAdmin
     });
 });
 
 // Exportar carnet a PDF
-app.get('/dashboard/carnet/pdf', checkAuth, async (req, res) => {
+app.get('/dashboard/carnet/:id/pdf', checkAuth, async (req, res) => {
     const User = require('./models/user');
     const generateUserQR = require('./controllers/generateUserQR');
     const ejs = require('ejs');
@@ -418,7 +456,7 @@ app.get('/dashboard/carnet/pdf', checkAuth, async (req, res) => {
     let user = null;
     let qr = null;
     try {
-        user = await User.findByPk(req.session.user.id);
+        user = await User.findByPk(req.params.id || req.session.user.id);
         qr = await generateUserQR(user);
         // Renderizar HTML del carnet
         const html = await ejs.renderFile(path.join(__dirname, 'views', 'carnet.ejs'), {
@@ -440,7 +478,7 @@ app.get('/dashboard/carnet/pdf', checkAuth, async (req, res) => {
 });
 
 // Subida de foto tipo carnet
-app.post('/dashboard/carnet/foto', checkAuth, uploadPhoto.single('photo'), async (req, res) => {
+app.post('/dashboard/carnet/:id/foto', checkAuth, uploadPhoto.single('photo'), async (req, res) => {
     const User = require('./models/user');
     if (!req.file) {
         console.log('No se recibió archivo en la petición');
@@ -460,14 +498,14 @@ app.post('/dashboard/carnet/foto', checkAuth, uploadPhoto.single('photo'), async
     photo_path = photo_path.replace(/\//g, '\\');
     console.log('Ruta relativa final a guardar:', photo_path);
     try {
-        await User.update({ photo_path }, { where: { id: req.session.user.id } });
+        await User.update({ photo_path }, { where: { id: req.params.id || req.session.user.id } });
         req.session.user.photo_path = photo_path;
         req.session.flash = { type: 'success', message: 'Foto subida correctamente.' };
     } catch (err) {
         console.log('Error al guardar la foto en la base de datos:', err);
         req.session.flash = { type: 'error', message: 'Error al guardar la foto.' };
     }
-    res.redirect('/dashboard/carnet');
+    res.redirect(`/dashboard/carnet/${req.params.id}`);
 });
 
 // --- Middleware para proteger rutas de administrador ---
@@ -511,6 +549,13 @@ app.get('/admin/users/:id/farm', adminAuth, async (req, res) => {
     const Parroquia = require('./models/parroquia');
     const userId = req.params.id;
     let farms = [];
+
+    let flash = null;
+    if (req.session.flash) {
+        flash = req.session.flash;
+        delete req.session.flash;
+    }
+
     try {
         const [userResults] = await sequelize.query('SELECT * FROM owners WHERE id = ?', {
             replacements: [userId]
@@ -540,7 +585,7 @@ app.get('/admin/users/:id/farm', adminAuth, async (req, res) => {
             return { ...farm.get({ plain: true }), quantity };
         });
         // Renderizar la vista con la información del usuario y sus fincas
-        res.render('admin-user-farm', { user, farms, isAdmin: true });
+        res.render('admin-user-farm', { user, farms, isAdmin: true, flash });
     } catch (err) {
         console.error('Error al obtener información del usuario o su finca:', err);
         res.status(500).send('Error interno del servidor');
@@ -552,6 +597,12 @@ app.post('/admin/users/:id/edit', adminAuth, (req, res) => {
     const sequelize = require('./config/db');
     const userId = req.params.id;
     const { names, surnames, email, phone } = req.body;
+    let flash = null;
+    if (req.session.flash) {
+        flash = req.session.flash;
+        delete req.session.flash;
+    }
+
     try {
          sequelize.query(
             'UPDATE owners SET names = ?, surnames = ?, email = ?, phone = ? WHERE id = ?',
@@ -559,6 +610,7 @@ app.post('/admin/users/:id/edit', adminAuth, (req, res) => {
                 replacements: [names, surnames, email, phone, userId]
             }
         );
+        req.session.flash = { type: 'success', message: 'Información del usuario actualizada correctamente.' };
         res.redirect(`/admin/users/${userId}/farm`);
     } catch (err) {
         console.error('Error al actualizar información del usuario:', err);

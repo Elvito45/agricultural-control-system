@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS `owners` (
     `phone` VARCHAR(15),
     `email` VARCHAR(100) NOT NULL UNIQUE,
     `hash` VARCHAR(255) NOT NULL,
+    `photo_path` VARCHAR(255),
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB;

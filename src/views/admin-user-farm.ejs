@@ -37,6 +37,10 @@
         <a href="/logout">Cerrar sesión</a>
     </nav>
     <div class="dashboard-main">
+        <% if (flash) { %>
+            <div class="flash-message <%= flash.type %>"><%= flash.message %></div>
+        <% } %>
+        
         <h1>Usuario: <%= user.names %> <%= user.surnames %></h1>
         <form action="/admin/users/<%= user.id %>/edit" method="POST" class="admin-edit-user-form">
             <label>ID:</label>

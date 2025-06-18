@@ -32,6 +32,10 @@ Owner.init({
     created_at: {
         type: DataTypes.DATE,
         defaultValue: DataTypes.NOW
+    },
+    photo_path: {
+        type: DataTypes.STRING(255),
+        allowNull: true
     }
 }, {
     sequelize,
