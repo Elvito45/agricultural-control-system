@@ -135,7 +135,7 @@ nav a:hover {
     transform: translateY(-2px) scale(1.04);
     box-shadow: 0 6px 18px rgba(44,62,80,0.13);
 }
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&display=swap');
 .dashboard-main {
     max-width: 1000px;
     margin: 30px auto 40px auto;
@@ -255,57 +255,90 @@ button:hover {
     0% { opacity: 0; transform: scale(0.85) translateY(30px); }
     100% { opacity: 1; transform: scale(1) translateY(0); }
 }
-.farms-list {
+.farms-list, .farm-list {
     display: flex;
     flex-wrap: wrap;
-    gap: 24px;
-    justify-content: flex-start; /* o center si prefieres centrar */
-    margin-bottom: 30px;
+    gap: 32px;
+    justify-content: flex-start;
+    margin-bottom: 36px;
 }
 .farm-info {
-    min-width: 260px;
-    max-width: 320px;
-    flex: 1 1 260px;
-    box-sizing: border-box;
-    background: #f4fbf6;
-    border: 2px solid #b2d8b2;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(44,62,80,0.08);
-    padding: 18px 16px 16px 16px;
+    min-width: 270px;
+    max-width: 350px;
+    flex: 1 1 270px;
+    background: linear-gradient(120deg, #f4fbf6 80%, #e0eafc 100%);
+    border: 2.5px solid #b2d8b2;
+    border-radius: 18px;
+    box-shadow: 0 6px 24px rgba(44,62,80,0.13);
+    padding: 28px 22px 22px 22px;
     margin-bottom: 0;
-    transition: box-shadow 0.2s;
+    transition: box-shadow 0.22s, border 0.22s, transform 0.18s;
+    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    position: relative;
+    overflow: hidden;
+    animation: fadeInUp 0.8s cubic-bezier(.23,1.01,.32,1) both;
 }
 .farm-info:hover {
-    box-shadow: 0 4px 16px rgba(44,62,80,0.18);
+    box-shadow: 0 10px 32px rgba(44,62,80,0.18);
     border-color: #43a047;
+    transform: translateY(-4px) scale(1.025);
 }
 .farm-title {
-    font-size: 1.35em;         /* Más grande */
-    font-weight: bold;         /* Negrita */
-    font-family: 'Segoe UI', 'Arial Rounded MT Bold', Arial, sans-serif; /* Fuente más bonita */
+    font-size: 1.45em;
+    font-weight: 900;
+    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
     color: #218c4a;
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+    letter-spacing: 1.2px;
+    text-shadow: 0 2px 8px #43a04722;
 }
 .farm-address {
     color: #27613b;
-    font-size: 1em;
-    margin-bottom: 6px;
+    font-size: 1.08em;
+    margin-bottom: 8px;
     font-style: italic;
+    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
 }
-.farm-state {
-    color: #43a047;
-    font-size: 0.98em;
-    margin-bottom: 6px;
+.farm-state, .farm-description {
+    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    font-size: 1em;
+    color: #27613b;
+    margin-bottom: 8px;
 }
 .farm-description {
-    color: #27613b;
     background: #e6f4ea;
-    border-radius: 6px;
-    padding: 8px 10px;
-    margin-bottom: 10px;
-    font-size: 0.97em;
+    border-radius: 8px;
+    padding: 10px 12px;
     min-height: 40px;
+    font-size: 0.99em;
+}
+.farm-info strong {
+    color: #43a047;
+    font-weight: 700;
+    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+}
+.farm-info a.btn {
+    font-family: 'Montserrat', 'Segoe UI', Arial, sans-serif;
+    font-weight: 700;
+    border-radius: 22px;
+    padding: 10px 26px;
+    font-size: 1em;
+    margin-top: 8px;
+    margin-bottom: 0;
+    background: linear-gradient(90deg, #43a047 60%, #1de9b6 100%);
+    color: #fff;
+    box-shadow: 0 2px 8px #43a04733;
+    border: none;
+    transition: background 0.18s, transform 0.18s;
+}
+.farm-info a.btn:hover {
+    background: linear-gradient(90deg, #1de9b6 0%, #43a047 100%);
+    color: #fff;
+    transform: scale(1.04);
+}
+@keyframes fadeInUp {
+    0% { opacity: 0; transform: translateY(40px); }
+    100% { opacity: 1; transform: translateY(0); }
 }
 @media (max-width: 900px) {
     .dashboard-main { padding: 10px 2vw; }
